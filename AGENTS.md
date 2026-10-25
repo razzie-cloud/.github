@@ -34,10 +34,14 @@
 - `internal/db/` embeds Goose SQL migrations from `migrations/`; they run during
   server initialization. Add new migration files for schema changes instead of
   rewriting migrations that may already have run.
-- The current entry point reads `DATABASE_URL` (required), `LISTEN_ADDR`
-  (default `:8080`), `ORIGIN` (`http://localhost:8080`), `RP_ID` (`localhost`),
-  and `RP_NAME` (`Minimal WebAuthn`). Origin and relying-party ID must agree
-  with the browser-facing deployment.
+- The entry point uses `internal/config.Load` for CLI flags and environment
+  variables: `SERVICE_PORT` (default `8080`), `POSTGRES_URI` (required unless
+  fetched from `POSTGRES_URI_FROM`), `POSTGRES_PASSWORD_FILE`, `ORIGIN`
+  (`http://localhost:8080`), `RP_ID` (`localhost`), and `RP_NAME`
+  (`Minimal WebAuthn`). Matching flags include `--port`, `--postgres-uri`,
+  `--postgres-uri-from`, `--postgres-password-file`, `--origin`, `--rp-id`,
+  and `--rp-name`. Origin and relying-party ID must agree with the deployment.
+  Redis settings are parsed by the loader but sessions still use process memory.
 - First-user bootstrap creates a token, stores its SHA-256 hash in PostgreSQL,
   and logs the raw token once. Treat that token as a credential. Sessions live
   in process memory and do not survive restarts or synchronize across replicas.
@@ -86,9 +90,9 @@
   submodule; the parent has no `go.mod` or `go.work`.
 - Format changed Go files with `gofmt`. For service changes run `go build ./...`
   and `go vet ./...` in the affected module, plus relevant tests.
-- Gateway: `cd access-gateway && go test ./...` checks compilation; currently
-  there are no test files. Running the service also needs PostgreSQL and
-  `DATABASE_URL`; use `go run ./cmd/access-gateway` with the variables above.
+- Gateway: `cd access-gateway && go test ./...` includes configuration tests.
+  Running the service also needs PostgreSQL and `POSTGRES_URI` (or
+  `POSTGRES_URI_FROM`); use `go run ./cmd/access-gateway` with the variables above.
 - Broker unit tests without Docker:
   `cd database-broker && go test ./internal/config ./internal/broker ./internal/router ./internal/util`.
 - Broker full suite: `cd database-broker && go test ./...`. Adapter integration
@@ -113,13 +117,9 @@
 These reflect the inspected checkout; recheck the relevant source before relying
 on them, and update this guide when they change.
 
-- Gateway `internal/config/config.go` is existing untracked work at parent setup.
-  It describes broker URI discovery and PostgreSQL/Redis flags, but `main.go`
-  still uses `app.Config` and environment variables directly. Do not assume the
-  new config loader is wired in or discard it as generated code.
-- Gateway Compose contains a stale `go run ./cmd/server` command despite the
-  Dockerfile using a compiled `/access-gateway` entrypoint. Resolve this before
-  relying on Compose to run the gateway.
+- Gateway configuration supports broker URI discovery and PostgreSQL/Redis
+  flags. `main.go` maps PostgreSQL, port, and WebAuthn settings into `app.Config`;
+  Redis is not wired into session storage.
 - The current stack's Caddy snippet points at `access-gateway:8080/forward_auth`,
   but the stack has no access-gateway service and the gateway has no implemented
   forward-auth handler. The `/` static-file route can catch unknown paths; a
@@ -127,8 +127,8 @@ on them, and update this guide when they change.
 - Infra references a published broker image. Editing the local broker or
   updating its parent pointer does not change the deployed image. Coordinate
   image publication and stack tags when releasing cross-component changes.
-- The existing local changes in gateway and infra predate parent setup. Keep
-  unrelated fixes separate from those changes and do not commit them incidentally.
+- The existing local changes in infra predate parent setup. Keep unrelated fixes
+  separate from those changes and do not commit them incidentally.
 
 ## Change discipline
 
