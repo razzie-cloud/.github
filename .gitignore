@@ -1,0 +1,15 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+.aws/
+
+# Local agent settings
+.agents/
+.codex/
+
+# Editor and OS files
+.idea/
+.vscode/
+*~
+.DS_Store

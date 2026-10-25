@@ -1,0 +1,9 @@
+[submodule "access-gateway"]
+	path = access-gateway
+	url = git@github.com:razzie-cloud/access-gateway.git
+[submodule "database-broker"]
+	path = database-broker
+	url = git@github.com:razzie-cloud/database-broker.git
+[submodule "infra"]
+	path = infra
+	url = git@github.com:razzie-cloud/infra.git
