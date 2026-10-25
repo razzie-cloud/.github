@@ -29,7 +29,7 @@ any existing local work before switching branches or updating submodules.
 
 ## Development
 
-Both services declare Go 1.25. Run Go commands from the individual service
+Both services declare Go 1.27. Run Go commands from the individual service
 directory; this parent has no Go module or workspace.
 
 ```sh

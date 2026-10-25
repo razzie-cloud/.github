@@ -82,7 +82,7 @@
 
 ## Local development and verification
 
-- Both Go modules declare Go 1.25. Run module commands inside the relevant
+- Both Go modules declare Go 1.27. Run module commands inside the relevant
   submodule; the parent has no `go.mod` or `go.work`.
 - Format changed Go files with `gofmt`. For service changes run `go build ./...`
   and `go vet ./...` in the affected module, plus relevant tests.
