@@ -6,7 +6,7 @@ specific commits.
 
 | Directory | Repository | Purpose |
 | --- | --- | --- |
-| `access-gateway/` | [access-gateway](https://github.com/razzie-cloud/access-gateway) | Go service with WebAuthn registration, login, and sessions backed by PostgreSQL |
+| `access-gateway/` | [access-gateway](https://github.com/razzie-cloud/access-gateway) | Passkey accounts, expiring device registration links, and admin user management |
 | `database-broker/` | [database-broker](https://github.com/razzie-cloud/database-broker) | Go API that provisions PostgreSQL databases and Dragonfly/Redis namespaces |
 | `infra/` | [infra](https://github.com/razzie-cloud/infra) | Docker Swarm stack, deployment script, NixOS configuration, and Hanko image |
 
@@ -41,7 +41,9 @@ The broker's full `go test ./...` suite also starts PostgreSQL and Dragonfly
 containers through testcontainers and needs a reachable local Docker daemon.
 See [AGENTS.md](AGENTS.md) for architecture, configuration, checks, and current
 integration limitations. See [database-broker/README.md](database-broker/README.md)
-for its API and [infra/nixos/README.md](infra/nixos/README.md) for host setup.
+for its API, [access-gateway/README.md](access-gateway/README.md)
+for passkey setup, device onboarding, and admin user management, and
+[infra/nixos/README.md](infra/nixos/README.md) for host setup.
 
 ## Updating components
 

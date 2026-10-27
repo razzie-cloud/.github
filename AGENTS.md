@@ -31,6 +31,8 @@
 - `internal/app/` owns HTTP handlers, WebAuthn, go-rel PostgreSQL persistence,
   bootstrap registration, and in-memory sessions. `internal/web/` embeds the
   browser UI directly into the binary; there is no frontend build pipeline.
+  Frontend work must use HTMX + PicoCSS, served from embedded local assets.
+  See `access-gateway/AGENTS.md` for enrollment and authorization invariants.
 - `internal/db/` embeds Goose SQL migrations from `migrations/`; they run during
   server initialization. Add new migration files for schema changes instead of
   rewriting migrations that may already have run.
@@ -42,6 +44,11 @@
   `--postgres-uri-from`, `--postgres-password-file`, `--origin`, `--rp-id`,
   and `--rp-name`. Origin and relying-party ID must agree with the deployment.
   Redis settings are parsed by the loader but sessions still use process memory.
+- The first user is the admin and can create regular users and issue device
+  registration links for them. Signed-in users can issue links for themselves.
+  Links are single-use, expire after a selected 1–43200 minutes, and have locally
+  generated QR codes. Enrollment consumes the link and stores the passkey in
+  one PostgreSQL transaction.
 - First-user bootstrap creates a token, stores its SHA-256 hash in PostgreSQL,
   and logs the raw token once. Treat that token as a credential. Sessions live
   in process memory and do not survive restarts or synchronize across replicas.
@@ -122,8 +129,8 @@ on them, and update this guide when they change.
   Redis is not wired into session storage.
 - The current stack's Caddy snippet points at `access-gateway:8080/forward_auth`,
   but the stack has no access-gateway service and the gateway has no implemented
-  forward-auth handler. The `/` static-file route can catch unknown paths; a
-  response from that URL does not demonstrate working forward authentication.
+  forward-auth handler. The gateway returns 404 for unknown routes, including
+  `/forward_auth`.
 - Infra references a published broker image. Editing the local broker or
   updating its parent pointer does not change the deployed image. Coordinate
   image publication and stack tags when releasing cross-component changes.
