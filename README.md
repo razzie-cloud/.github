@@ -29,6 +29,56 @@ any existing local work before switching branches or updating submodules.
 
 ## Development
 
+### Run the complete local stack
+
+With the submodules checked out and Docker Compose installed, run these commands
+from the project root against your local Docker daemon:
+
+```sh
+cp .env.example .env
+# Replace POSTGRES_PASSWORD in .env with a random value, e.g. openssl rand -hex 24.
+docker compose up --build -d
+docker compose logs access-gateway
+```
+
+Find `BOOTSTRAP TOKEN` in the gateway logs. Open <http://localhost:8080>, create
+the first administrator using that token and a passkey, then sign in. The token
+is logged only when first generated; keep the initial logs until setup is done.
+
+Open <http://127.0.0.1:8081> for the protected `traefik/whoami` demo. It redirects
+to the gateway for sign-in, then returns to whoami with a separate app session.
+Whoami displays the verified `X-Auth-Request-User` and `X-Auth-Request-Name`
+headers. Signing out at the gateway revokes access to the demo.
+
+Use the exact hostnames above to keep their host-only cookies separate:
+`localhost` for the gateway and `127.0.0.1` for whoami. Both are loopback HTTP origins,
+so local passkeys work without certificates or hosts-file changes. `AUTH_PORT`
+and `WHOAMI_PORT` in `.env` can override the default ports; use those ports in
+your browser too. Keep them distinct and use URI-unreserved characters for
+`POSTGRES_PASSWORD`, as documented in `.env.example`.
+
+The root [docker-compose.yml](docker-compose.yml) builds both Go services from
+their submodules using host build networking, matching the gateway's standalone
+Compose setup. The broker provisions the gateway's PostgreSQL database;
+a separate Redis instance stores sessions with append-only persistence. Caddy
+checks every whoami request, including the SSO callback, with the gateway's
+`/forward_auth` endpoint before proxying it. Only Caddy publishes ports, bound
+to loopback; the broker and data stores stay on an internal network. This setup
+is for local development; the Swarm deployment remains under `infra/`.
+
+PostgreSQL and Redis use named volumes, preserving accounts and sessions across
+container recreation. Stop the stack with `docker compose down`. To deliberately
+erase all local accounts and sessions and start bootstrap again, use
+`docker compose down --volumes`.
+
+Validate the configuration without starting containers:
+
+```sh
+docker compose config --quiet
+```
+
+### Run service checks
+
 Both services declare Go 1.27. Run Go commands from the individual service
 directory; this parent has no Go module or workspace.
 

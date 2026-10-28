@@ -29,7 +29,7 @@
 - Go module `github.com/razzie-cloud/access-gateway`; entry point
   `cmd/access-gateway/main.go`.
 - `internal/app/` owns HTTP handlers, WebAuthn, go-rel PostgreSQL persistence,
-  bootstrap registration, and in-memory sessions. `internal/web/` embeds the
+  bootstrap registration, and Redis-backed sessions. `internal/web/` embeds the
   browser UI directly into the binary; there is no frontend build pipeline.
   Frontend work must use HTMX + PicoCSS, served from embedded local assets.
   See `access-gateway/AGENTS.md` for enrollment and authorization invariants.
@@ -43,7 +43,9 @@
   (`Minimal WebAuthn`). Matching flags include `--port`, `--postgres-uri`,
   `--postgres-uri-from`, `--postgres-password-file`, `--origin`, `--rp-id`,
   and `--rp-name`. Origin and relying-party ID must agree with the deployment.
-  Redis settings are parsed by the loader but sessions still use process memory.
+  `REDIS_URI` (or `REDIS_URI_FROM`) is required for shared session storage;
+  `REDIS_PASSWORD_FILE` supplies Redis credentials. Payloads are cached locally
+  with bounded TTLs, while authorization checks Redis key liveness on every hit.
 - The first user is the admin and can create regular users and issue device
   registration links for them. Signed-in users can issue links for themselves.
   Links are single-use, expire after a selected 1–43200 minutes, and have locally
@@ -51,7 +53,8 @@
   one PostgreSQL transaction.
 - First-user bootstrap creates a token, stores its SHA-256 hash in PostgreSQL,
   and logs the raw token once. Treat that token as a credential. Sessions live
-  in process memory and do not survive restarts or synchronize across replicas.
+  in Redis and survive gateway restarts. Replicas share sessions when configured
+  with the same public ORIGIN and Redis backend/database.
 
 ### database-broker
 
@@ -98,8 +101,10 @@
 - Format changed Go files with `gofmt`. For service changes run `go build ./...`
   and `go vet ./...` in the affected module, plus relevant tests.
 - Gateway: `cd access-gateway && go test ./...` includes configuration tests.
-  Running the service also needs PostgreSQL and `POSTGRES_URI` (or
-  `POSTGRES_URI_FROM`); use `go run ./cmd/access-gateway` with the variables above.
+  Integration tests require disposable local `TEST_DATABASE_URL` and
+  `TEST_REDIS_URL` backends (Redis-only tests need only the latter). Running the
+  service needs PostgreSQL and Redis via `POSTGRES_URI`/`REDIS_URI` or their
+  `_FROM` discovery options; use `go run ./cmd/access-gateway` with these set.
 - Broker unit tests without Docker:
   `cd database-broker && go test ./internal/config ./internal/broker ./internal/router ./internal/util`.
 - Broker full suite: `cd database-broker && go test ./...`. Adapter integration
@@ -108,6 +113,14 @@
   Ensure the daemon is local/disposable, not the production Docker context.
 - Each service has its own Dockerfile and Compose file. The local stacks both
   publish ports 5432 and 8080; run them separately or adjust host port mappings.
+- The parent `docker-compose.yml` builds both services and runs a local auth
+  demo with PostgreSQL, Redis, Caddy, and traefik/whoami. Copy `.env.example` to
+  `.env` and set a local PostgreSQL password before starting. Only Caddy publishes
+  loopback ports: gateway `http://localhost:8080`, whoami `http://127.0.0.1:8081`.
+  `AUTH_PORT`/`WHOAMI_PORT` override those ports. The broker provisions only the
+  gateway's PostgreSQL database here; sessions use a separate persistent Redis.
+  Root `Caddyfile` protects every whoami path, including the SSO callback.
+  Validate with `docker compose --env-file .env.example config --quiet`.
 - Validate shell edits with `bash -n infra/deploy.sh` and
   `sh -n infra/images/hanko/entrypoint.sh`. With the Compose plugin installed,
   validate each service using `docker compose -f <service>/docker-compose.yml config --quiet`.
@@ -125,12 +138,13 @@ These reflect the inspected checkout; recheck the relevant source before relying
 on them, and update this guide when they change.
 
 - Gateway configuration supports broker URI discovery and PostgreSQL/Redis
-  flags. `main.go` maps PostgreSQL, port, and WebAuthn settings into `app.Config`;
-  Redis is not wired into session storage.
-- The current stack's Caddy snippet points at `access-gateway:8080/forward_auth`,
-  but the stack has no access-gateway service and the gateway has no implemented
-  forward-auth handler. The gateway returns 404 for unknown routes, including
-  `/forward_auth`.
+  flags. `main.go` maps these into `app.Config`; Redis stores sessions, passkey
+  ceremonies, and SSO handoffs. Local caches never bypass Redis liveness checks.
+- The gateway implements `/forward_auth` and `/auth/authorize` with host-only
+  app cookies and a single-use callback at the app's `/_auth/callback` path.
+  Set `FORWARD_AUTH_ORIGINS` to exact allowed app origins; `ORIGIN` is the public
+  gateway URL. The stack's Caddy snippet uses this endpoint and copies identity
+  headers, but the stack still has no access-gateway service/public auth route.
 - Infra references a published broker image. Editing the local broker or
   updating its parent pointer does not change the deployed image. Coordinate
   image publication and stack tags when releasing cross-component changes.
