@@ -7,3 +7,6 @@
 [submodule "infra"]
 	path = infra
 	url = git@github.com:razzie-cloud/infra.git
+[submodule "files"]
+	path = files
+	url = git@github.com:razzie-cloud/files.git

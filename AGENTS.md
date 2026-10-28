@@ -2,7 +2,7 @@
 
 ## Repository boundaries and Git workflow
 
-- This is the razcloud parent repository. `access-gateway/`, `database-broker/`,
+- This is the razcloud parent repository. `access-gateway/`, `database-broker/`, `files/`,
   and `infra/` are Git submodules with separate histories and GitHub remotes
   under `razzie-cloud`. Use standard `git submodule` commands.
 - Keep root documentation and coordination files in the parent. Change service
@@ -75,6 +75,24 @@
   `POSTGRES_PASSWORD_FILE`, `DRAGONFLY_URI`, and `DRAGONFLY_PASSWORD_FILE`, with
   matching flags. Each backend is registered only when its URI is supplied.
 
+### files
+
+- Go module `github.com/razzie-cloud/files`; entry point `cmd/files/main.go`.
+  Read `files/AGENTS.md` for invariants and verification commands.
+- Named per-user web directories map directly to S3 buckets/prefixes. Embedded
+  rclone S3 and optional crypt APIs handle storage; there is no rclone subprocess,
+  local sync, RC API, or custom encryption. UI assets use embedded HTMX/PicoCSS.
+- Identity is the auth proxy's `X-Auth-Request-User` UUID. All metadata queries are
+  owner-scoped. Connection read-only access takes precedence over directory policy.
+- `POSTGRES_URI_FROM` normally provisions `/v1/instances/postgres/files/uri`.
+  Configuration, credentials, and crypt passwords use owner-scoped PostgreSQL
+  records. No files-specific secret volume or encryption key is required.
+  IMPORT_SECRETS_DIR is a one-time option to import a legacy secrets volume.
+- S3 clients use a guarded loopback egress proxy for connection-time destination
+  checks. Private/HTTP endpoints require exact operator-managed exceptions.
+- PostgreSQL integration tests require a disposable loopback `TEST_DATABASE_URL`;
+  other storage tests start an in-memory S3 HTTP server automatically.
+
 ### infra
 
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Dragonfly,
@@ -96,7 +114,7 @@
 
 ## Local development and verification
 
-- Both Go modules declare Go 1.27. Run module commands inside the relevant
+- All three Go modules declare Go 1.27. Run module commands inside the relevant
   submodule; the parent has no `go.mod` or `go.work`.
 - Format changed Go files with `gofmt`. For service changes run `go build ./...`
   and `go vet ./...` in the affected module, plus relevant tests.
@@ -111,15 +129,19 @@
   tests use testcontainers to start PostgreSQL and Dragonfly and pull images
   if necessary. They do not skip themselves when Docker is unavailable.
   Ensure the daemon is local/disposable, not the production Docker context.
-- Each service has its own Dockerfile and Compose file. The local stacks both
+- Each service has its own Dockerfile and Compose file. The gateway/broker stacks both
   publish ports 5432 and 8080; run them separately or adjust host port mappings.
-- The parent `docker-compose.yml` builds both services and runs a local auth
+- The parent `docker-compose.yml` builds all three services and runs a local auth
   demo with PostgreSQL, Redis, Caddy, and traefik/whoami. Copy `.env.example` to
-  `.env` and set a local PostgreSQL password before starting. Only Caddy publishes
+  `.env` and set a local PostgreSQL password before starting. Caddy publishes
   loopback ports: gateway `http://localhost:8080`, whoami `http://127.0.0.1:8081`.
-  `AUTH_PORT`/`WHOAMI_PORT` override those ports. The broker provisions only the
-  gateway's PostgreSQL database here; sessions use a separate persistent Redis.
-  Root `Caddyfile` protects every whoami path, including the SSO callback.
+  `AUTH_PORT`/`WHOAMI_PORT` override those ports. The broker provisions the
+  gateway's and files' PostgreSQL databases; sessions use a separate persistent Redis.
+  Files uses `http://files.localhost:8082` (`FILES_PORT`), published on
+  `127.0.0.1` for Windows/WSL2 browser access, and its own broker
+  database, including secret records. The optional `storage-demo` profile adds a
+  disposable in-memory S3 fixture with bucket `files-demo`; set S3_DEV_PASSWORD.
+  Root `Caddyfile` protects every whoami/files path, including the SSO callback.
   Validate with `docker compose --env-file .env.example config --quiet`.
 - Validate shell edits with `bash -n infra/deploy.sh` and
   `sh -n infra/images/hanko/entrypoint.sh`. With the Compose plugin installed,
@@ -150,6 +172,9 @@ on them, and update this guide when they change.
   image publication and stack tags when releasing cross-component changes.
 - The existing local changes in infra predate parent setup. Keep unrelated fixes
   separate from those changes and do not commit them incidentally.
+- `infra/files-stack.yml` is an optional merge overlay that supplies the files
+  service and missing public gateway route using explicitly supplied published
+  image tags. See `infra/FILES.md`. The base-only `deploy.sh` does not include it.
 
 ## Change discipline
 
