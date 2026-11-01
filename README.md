@@ -9,7 +9,7 @@ specific commits.
 | `access-gateway/` | [access-gateway](https://github.com/razzie-cloud/access-gateway) | Passkey accounts, expiring device registration links, and admin user management |
 | `files/` | [files](https://github.com/razzie-cloud/files) | Private S3-backed directories, optional rclone crypt, and an HTMX/PicoCSS file manager |
 | `database-broker/` | [database-broker](https://github.com/razzie-cloud/database-broker) | Go API that provisions PostgreSQL databases and Dragonfly/Redis namespaces |
-| `infra/` | [infra](https://github.com/razzie-cloud/infra) | Docker Swarm stack, deployment script, NixOS configuration, and Hanko image |
+| `infra/` | [infra](https://github.com/razzie-cloud/infra) | Docker Swarm stack, deployment script, and NixOS configuration |
 
 The [files service plan](docs/files-service-plan.md) records its architecture and
 acceptance criteria. See [files/README.md](files/README.md) for configuration and

@@ -96,16 +96,13 @@
 ### infra
 
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Dragonfly,
-  the broker, Caddy Docker Proxy, and a whoami demo. The `internal` overlay
-  carries database traffic; `web` carries ingress traffic. Caddy uses service
+  the broker, access-gateway, files, Caddy Docker Proxy, and a whoami demo.
+  The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
   deployment labels and publishes ports 80/443.
 - `deploy.sh` creates missing external Docker secrets and deploys the stack.
   Its defaults are Docker context `razcloud` and stack name `razzie-cloud`,
   overridable with `DOCKER_CONTEXT` and `STACK_NAME`. It resolves the stack
   file relative to the current directory, so deployment runs from `infra/`.
-- `images/hanko/` contains a Hanko image, a configuration template, and an
-  entrypoint that requests broker credentials and runs Hanko migrations. Its
-  presence does not mean Hanko is included in the current stack.
 - `nixos/configuration.nix` describes the host, SSH, Docker, firewall, upgrades,
   and reboot timer. `networking.nix` contains placeholder addresses.
   `hardware-configuration.nix` is host-provided and absent here. `harness.nix`
@@ -143,8 +140,7 @@
   disposable in-memory S3 fixture with bucket `files-demo`; set S3_DEV_PASSWORD.
   Root `Caddyfile` protects every whoami/files path, including the SSO callback.
   Validate with `docker compose --env-file .env.example config --quiet`.
-- Validate shell edits with `bash -n infra/deploy.sh` and
-  `sh -n infra/images/hanko/entrypoint.sh`. With the Compose plugin installed,
+- Validate shell edits with `bash -n infra/deploy.sh`. With the Compose plugin installed,
   validate each service using `docker compose -f <service>/docker-compose.yml config --quiet`.
 - Validate stack edits without deploying:
   `STACK_NAME=razzie-cloud docker stack config -c infra/docker-stack.yml >/dev/null`.
@@ -165,16 +161,19 @@ on them, and update this guide when they change.
 - The gateway implements `/forward_auth` and `/auth/authorize` with host-only
   app cookies and a single-use callback at the app's `/_auth/callback` path.
   Set `FORWARD_AUTH_ORIGINS` to exact allowed app origins; `ORIGIN` is the public
-  gateway URL. The stack's Caddy snippet uses this endpoint and copies identity
-  headers, but the stack still has no access-gateway service/public auth route.
+  gateway URL. The stack includes access-gateway at `https://auth.razzie.cloud`
+  and protects files and whoami with forward auth and verified identity headers.
+  The files route strips incoming identity headers before authentication.
+  All paths, including callbacks, are protected.
 - Infra references a published broker image. Editing the local broker or
   updating its parent pointer does not change the deployed image. Coordinate
   image publication and stack tags when releasing cross-component changes.
 - The existing local changes in infra predate parent setup. Keep unrelated fixes
   separate from those changes and do not commit them incidentally.
-- `infra/files-stack.yml` is an optional merge overlay that supplies the files
-  service and missing public gateway route using explicitly supplied published
-  image tags. See `infra/FILES.md`. The base-only `deploy.sh` does not include it.
+- The stack supports configurable image tags, defaulting access-gateway and
+  files to `v1.0.0` and the broker to `v1.0.3` (including the `v` prefix).
+  `deploy.sh` includes all services through one stack file. See `infra/README.md`
+  for tag variables and `infra/AGENTS.md` for infrastructure invariants.
 
 ## Change discipline
 
