@@ -155,6 +155,13 @@
 These reflect the inspected checkout; recheck the relevant source before relying
 on them, and update this guide when they change.
 
+- All services expose private GET/HEAD `/healthz` (liveness) and `/readyz`
+  (cached readiness). Background checks have two-second dependency deadlines,
+  repeat ten seconds after each cycle, and expire results after thirty seconds.
+  Gateway checks PostgreSQL/Redis; broker checks each configured backend once
+  (no backends means not ready); files checks PostgreSQL, not user S3 endpoints.
+  Successful probes are quiet; failed background checks log fixed dependency
+  names without backend errors. Container probes use `/readyz` on SERVICE_PORT.
 - Gateway configuration supports broker URI discovery and PostgreSQL/Redis
   flags. `main.go` maps these into `app.Config`; Redis stores sessions, passkey
   ceremonies, and SSO handoffs. Local caches never bypass Redis liveness checks.

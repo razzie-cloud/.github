@@ -42,8 +42,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      # List metadata only; instance lookup endpoints can provision databases.
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/v1/instances/postgres"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/readyz"]
       interval: 2s
       timeout: 2s
       retries: 30
@@ -69,11 +68,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    #healthcheck:
-    #  test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
-    #  interval: 2s
-    #  timeout: 2s
-    #  retries: 30
 
   whoami:
     image: traefik/whoami:v1.11
