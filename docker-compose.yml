@@ -48,6 +48,8 @@ services:
       retries: 30
 
   access-gateway:
+    image: ghcr.io/razzie-cloud/access-gateway:${ACCESS_GATEWAY_IMAGE_TAG:-dev}
+    pull_policy: build
     build:
       context: ./access-gateway
       network: host

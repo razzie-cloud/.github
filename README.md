@@ -46,6 +46,10 @@ docker compose up --build -d
 docker compose logs access-gateway
 ```
 
+Compose builds the gateway from the checked-out source and tags it as
+`ghcr.io/razzie-cloud/access-gateway:dev`. Override `ACCESS_GATEWAY_IMAGE_TAG`
+in `.env` to change the local build's tag.
+
 Find `BOOTSTRAP TOKEN` in the gateway logs. Open <http://localhost:8080>, create
 the first administrator using that token and a passkey, then sign in. The token
 is logged only when first generated; keep the initial logs until setup is done.
@@ -145,6 +149,28 @@ Use the same process for the other components. The parent records only their
 commit IDs: uncommitted and untracked component files are not included. Publish
 component commits before publishing parent commits that reference them.
 
-Updating a parent pointer does not build or deploy a service. The Swarm stack
-uses published images; image releases and stack image references must be updated
-separately when a component change needs deployment.
+Parent pointers record source checkouts independently of deployment releases.
+Service releases do not require version-only commits here or in infra.
+
+To select the newest stable release tags from the service remotes:
+
+```sh
+make latest-tags
+make config
+# Once the tagged images have been published, deploy explicitly:
+make deploy
+```
+
+`latest-tags` uses Bash, Git, awk, and GNU coreutils (`sort -V`). It selects the highest
+numeric stable release tag (`MAJOR.MINOR.PATCH`, with an optional `v` prefix),
+fetches it into each service repository, and writes the image tags to ignored
+`infra/.env`. It preserves other settings and leaves branches, checkouts, and
+parent submodule pointers unchanged. Prereleases are excluded. Tag discovery
+does not verify that image publishing has finished.
+
+The file is initialized from `infra/.env.example` when absent. Review it before
+deploying; edit it to pin older releases. `make config` and `make deploy` delegate
+to infra's Makefile without fetching new tags. `make deploy-latest` selects
+releases and then deploys. Use `INFRA_ENV_FILE=/absolute/path` to select another
+file, or pass image tags, `DOCKER_CONTEXT`, and `STACK_NAME` as Make command-line
+assignments. See [infra/README.md](infra/README.md) for standalone use.

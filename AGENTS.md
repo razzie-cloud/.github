@@ -143,7 +143,8 @@
 - Validate shell edits with `bash -n infra/deploy.sh`. With the Compose plugin installed,
   validate each service using `docker compose -f <service>/docker-compose.yml config --quiet`.
 - Validate stack edits without deploying:
-  `STACK_NAME=razzie-cloud docker stack config -c infra/docker-stack.yml >/dev/null`.
+  `make config` with service tags selected in ignored `infra/.env`. Alternatively,
+  `docker compose --env-file infra/.env -f infra/docker-stack.yml config --quiet`.
   Use a Nix-capable environment for Nix validation; complete host evaluation
   requires its hardware configuration and actual networking settings.
 - Report exactly which checks ran and any environment limitations. Do not run
@@ -165,6 +166,13 @@ on them, and update this guide when they change.
 - Gateway configuration supports broker URI discovery and PostgreSQL/Redis
   flags. `main.go` maps these into `app.Config`; Redis stores sessions, passkey
   ceremonies, and SSO handoffs. Local caches never bypass Redis liveness checks.
+- Gateway login asks for a username and filters passkeys by that account. Unknown
+  users receive deterministic decoys; every list is padded to a common credential
+  count/ID-length profile. PostgreSQL app_states persists the shared decoy secret.
+  Log attempts and failures with bounded, quoted claimed_username, including
+  canceled prompts; no explicit account-existence response is exposed.
+  Credential-ID privacy limitations remain. Existing username-less ceremonies
+  must restart on upgrade.
 - The gateway implements `/forward_auth` and `/auth/authorize` with host-only
   app cookies and a single-use callback at the app's `/_auth/callback` path.
   Set `FORWARD_AUTH_ORIGINS` to exact allowed app origins; `ORIGIN` is the public
@@ -177,10 +185,15 @@ on them, and update this guide when they change.
   image publication and stack tags when releasing cross-component changes.
 - The existing local changes in infra predate parent setup. Keep unrelated fixes
   separate from those changes and do not commit them incidentally.
-- The stack supports configurable image tags, defaulting access-gateway and
-  files to `v1.0.0` and the broker to `v1.0.3` (including the `v` prefix).
-  `deploy.sh` includes all services through one stack file. See `infra/README.md`
-  for tag variables and `infra/AGENTS.md` for infrastructure invariants.
+- The stack requires image tags from ignored `infra/.env`; `.env.example` in
+  infra lists the variables. Do not record current service versions in stack
+  files, README.md, or AGENTS.md. Root `make latest-tags` selects the highest
+  stable numeric release tags from the service remotes without changing source
+  checkouts or parent pins. Root `make config` and `make deploy` delegate to
+  infra's Makefile, which loads and exports the selected environment file.
+  `make deploy-latest` combines tag selection and deployment; do not run it as
+  validation. Releases need no parent or infra version-only commits. See
+  `infra/README.md` and `infra/AGENTS.md` for deployment invariants.
 
 ## Change discipline
 
