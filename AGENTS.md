@@ -167,8 +167,15 @@ on them, and update this guide when they change.
   repeat ten seconds after each cycle, and expire results after thirty seconds.
   Gateway checks PostgreSQL/Redis; broker checks each configured backend once
   (no backends means not ready); files checks PostgreSQL, not user S3 endpoints.
-  Successful probes are quiet; failed background checks log fixed dependency
-  names without backend errors. Container probes use `/readyz` on SERVICE_PORT.
+  Successful probes are quiet; background checks log dependency failure and
+  recovery transitions with fixed dependency names, without backend errors.
+  Container probes use `/readyz` on SERVICE_PORT.
+- All services use slog JSON logs on stderr. LOG_LEVEL selects DEBUG, INFO
+  (default), WARN, or ERROR. Routine HTTP traffic, SQL, static assets, and health
+  probes are quiet at INFO. Request failures use generated IDs, static route
+  templates, and classified errors; never log raw backend errors or capability
+  URLs. The gateway preserves its one-time bootstrap credential event even at
+  ERROR so first-user setup remains possible.
 - Gateway configuration supports broker URI discovery and PostgreSQL/Redis
   flags. `main.go` maps these into `app.Config`; Redis stores sessions, passkey
   ceremonies, and SSO handoffs. Local caches never bypass Redis liveness checks.
