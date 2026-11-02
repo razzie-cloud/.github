@@ -7,7 +7,7 @@ specific commits.
 | Directory | Repository | Purpose |
 | --- | --- | --- |
 | `access-gateway/` | [access-gateway](https://github.com/razzie-cloud/access-gateway) | Passkey accounts, expiring device registration links, and admin user management |
-| `files/` | [files](https://github.com/razzie-cloud/files) | Private S3-backed directories, optional rclone crypt, and an HTMX/PicoCSS file manager |
+| `files/` | [files](https://github.com/razzie-cloud/files) | S3-backed directories, optional rclone crypt, public shares, and an HTMX/PicoCSS file manager |
 | `database-broker/` | [database-broker](https://github.com/razzie-cloud/database-broker) | Go API that provisions PostgreSQL databases and Dragonfly/Redis namespaces |
 | `infra/` | [infra](https://github.com/razzie-cloud/infra) | Docker Swarm stack, deployment script, and NixOS configuration |
 
@@ -71,6 +71,12 @@ port). Use this exact hostname to isolate its app cookie from the gateway and
 whoami: host-only cookies are shared across ports on the same host.
 Opening `http://localhost:8082` or `http://127.0.0.1:8082` redirects to
 `files.localhost`, preserving the requested path and query string.
+Public share links use `http://shared-files.localhost:8082/s/<token>` on the same
+`FILES_PORT`. Use **Share** beside an entry or **Sharing** in the directory toolbar
+to create read-only file/folder links with an optional password. The sharing
+hostname permits unauthenticated visitors and only exposes share/static routes;
+the files management hostname keeps forward authentication on every path.
+
 Modern Chrome, Edge, and Firefox resolve `.localhost` names to loopback without
 hosts-file changes. All three ports are published on `127.0.0.1`, so Windows
 browsers can reach the stack through WSL2's localhost forwarding in NAT mode.

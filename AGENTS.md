@@ -82,8 +82,13 @@
 - Named per-user web directories map directly to S3 buckets/prefixes. Embedded
   rclone S3 and optional crypt APIs handle storage; there is no rclone subprocess,
   local sync, RC API, or custom encryption. UI assets use embedded HTMX/PicoCSS.
-- Identity is the auth proxy's `X-Auth-Request-User` UUID. All metadata queries are
-  owner-scoped. Connection read-only access takes precedence over directory policy.
+- Identity is the auth proxy's `X-Auth-Request-User` UUID. Management metadata queries
+  are owner-scoped. Public shares use random capability links on a separate
+  `SHARE_ORIGIN` hostname (`shared-files`), with read-only file/folder access and
+  optional password sessions. Shares bind to directory IDs and cascade on deletion.
+  Only capability discovery is unscoped; subsequent metadata uses the share owner.
+  Share/storage snapshots cache for 30 seconds per replica; management changes
+  invalidate locally and revocation propagates within that TTL. Connection read-only access takes precedence over directory policy.
 - `POSTGRES_URI_FROM` normally provisions `/v1/instances/postgres/files/uri`.
   Configuration, credentials, and crypt passwords use owner-scoped PostgreSQL
   records. No files-specific secret volume or encryption key is required.
@@ -138,7 +143,8 @@
   `127.0.0.1` for Windows/WSL2 browser access, and its own broker
   database, including secret records. The optional `storage-demo` profile adds a
   disposable in-memory S3 fixture with bucket `files-demo`; set S3_DEV_PASSWORD.
-  Root `Caddyfile` protects every whoami/files path, including the SSO callback.
+  Root `Caddyfile` protects every whoami/files management path, including the SSO
+  callback. Public share links use `shared-files.localhost` on the files port.
   Validate with `docker compose --env-file .env.example config --quiet`.
 - Validate shell edits with `bash -n infra/deploy.sh`. With the Compose plugin installed,
   validate each service using `docker compose -f <service>/docker-compose.yml config --quiet`.
@@ -179,7 +185,10 @@ on them, and update this guide when they change.
   gateway URL. The stack includes access-gateway at `https://auth.razzie.cloud`
   and protects files and whoami with forward auth and verified identity headers.
   The files route strips incoming identity headers before authentication.
-  All paths, including callbacks, are protected.
+  All management paths, including callbacks, are protected. The separate
+  `shared-files.razzie.cloud` host exposes public `/s/*` and `/static/*` only,
+  strips identity headers, and returns 404 elsewhere. It uses files SHARE_ORIGIN
+  and is not in gateway FORWARD_AUTH_ORIGINS.
 - Infra references a published broker image. Editing the local broker or
   updating its parent pointer does not change the deployed image. Coordinate
   image publication and stack tags when releasing cross-component changes.
