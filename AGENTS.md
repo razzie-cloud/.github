@@ -188,6 +188,8 @@ on them, and update this guide when they change.
   must restart on upgrade.
 - The gateway implements `/forward_auth` and `/auth/authorize` with host-only
   app cookies and a single-use callback at the app's `/_auth/callback` path.
+  `/forward_auth/admin` reuses this flow and requires the current PostgreSQL
+  admin role on each app request; regular users receive 403 without a redirect.
   Set `FORWARD_AUTH_ORIGINS` to exact allowed app origins; `ORIGIN` is the public
   gateway URL. The stack includes access-gateway at `https://auth.razzie.cloud`
   and protects files and whoami with forward auth and verified identity headers.
