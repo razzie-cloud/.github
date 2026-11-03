@@ -61,7 +61,7 @@ services:
       RP_NAME: Razcloud local
       # Gateway ports are private; Caddy reaches it over Docker networks.
       TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
-      FORWARD_AUTH_ORIGINS: http://127.0.0.1:${WHOAMI_PORT:-8081},http://files.localhost:${FILES_PORT:-8082}
+      FORWARD_AUTH_ORIGINS: http://127.0.0.1:${WHOAMI_PORT:-8081},http://files.localhost:${FILES_PORT:-8082},http://localhost:${DOZZLE_PORT:-8083}
     networks:
       - backend
       - web
@@ -73,6 +73,20 @@ services:
 
   whoami:
     image: traefik/whoami:v1.11
+    networks:
+      - web
+
+  dozzle:
+    image: amir20/dozzle:${DOZZLE_IMAGE_TAG:-latest}
+    environment:
+      DOZZLE_AUTH_PROVIDER: forward-proxy
+      DOZZLE_AUTH_HEADER_USER: X-Auth-Request-User
+      DOZZLE_AUTH_HEADER_NAME: X-Auth-Request-Name
+      DOZZLE_ENABLE_ACTIONS: "false"
+      DOZZLE_ENABLE_SHELL: "false"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - dozzle_data:/data
     networks:
       - web
 
@@ -111,11 +125,13 @@ services:
       AUTH_PORT: ${AUTH_PORT:-8080}
       WHOAMI_PORT: ${WHOAMI_PORT:-8081}
       FILES_PORT: ${FILES_PORT:-8082}
+      DOZZLE_PORT: ${DOZZLE_PORT:-8083}
     ports:
       - "127.0.0.1:${AUTH_PORT:-8080}:${AUTH_PORT:-8080}"
       - "127.0.0.1:${WHOAMI_PORT:-8081}:${WHOAMI_PORT:-8081}"
-      # WSL forwards 127.0.0.1 to Windows; browsers resolve files.localhost here.
+      # Loopback bindings; see README for host OS browser limitations.
       - "127.0.0.1:${FILES_PORT:-8082}:${FILES_PORT:-8082}"
+      - "127.0.0.1:${DOZZLE_PORT:-8083}:${DOZZLE_PORT:-8083}"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     networks:
@@ -128,6 +144,8 @@ services:
         condition: service_started
       files:
         condition: service_started
+      dozzle:
+        condition: service_started
 
 networks:
   backend:
@@ -137,3 +155,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  dozzle_data:

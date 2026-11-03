@@ -77,12 +77,41 @@ to create read-only file/folder links with an optional password. The sharing
 hostname permits unauthenticated visitors and only exposes share/static routes;
 the files management hostname keeps forward authentication on every path.
 
-Modern Chrome, Edge, and Firefox resolve `.localhost` names to loopback without
-hosts-file changes. All three ports are published on `127.0.0.1`, so Windows
-browsers can reach the stack through WSL2's localhost forwarding in NAT mode.
-`files.localhost` works for native Linux development too; it is a reserved local
-hostname, rather than a WSL distribution address. The Windows
-`\\wsl.localhost\Ubuntu` file-share path is unrelated to HTTP routing.
+Open <http://localhost:8083> for Dozzle's container logs (`DOZZLE_PORT`
+overrides the port; `DOZZLE_IMAGE_TAG` selects its image). It requires an
+administrator account: every request, including `/_auth/callback`, goes through
+the gateway's `/forward_auth/admin` endpoint. Regular users receive 403.
+Opening `127.0.0.1` on this port redirects to `localhost`, preserving the path
+and query string. Dozzle has no directly published port; Caddy
+is its only host entry point. Container actions and shell access are disabled.
+
+Dozzle's [forward-proxy authentication](https://dozzle.dev/guide/authentication/forward-proxy)
+normally reads `Remote-User`, `Remote-Name`, and optional `Remote-Email`,
+`Remote-Filter`, and `Remote-Roles`. We configure `DOZZLE_AUTH_HEADER_USER` as
+`X-Auth-Request-User` (stable account UUID) and `DOZZLE_AUTH_HEADER_NAME` as
+`X-Auth-Request-Name` (username). No email header is needed. Caddy strips supplied
+identity and `Remote-*` headers before copying the gateway's verified identity.
+Administrator authorization comes from the gateway's current database role.
+Dozzle's settings persist in the `dozzle_data` volume. Its Docker socket mount
+is read-only, but that does not restrict Docker API operations; only run this
+setup against a trusted local daemon.
+
+Host OS browser access has been an ongoing issue with the Files and Whoami
+local routes when Docker runs inside WSL2 or a VM. A successful request inside
+the development environment does not establish that a browser on the host OS
+can reach the same URL. In particular, `.localhost` names such as
+`files.localhost` and `dozzle.localhost` have not worked reliably in this setup;
+publishing a loopback port alone does not fix host-side name resolution or
+forwarding. Dozzle therefore uses plain `localhost` on its own port, `8083`,
+without redirecting to a `.localhost` name. The Files and Whoami routes above
+still use their existing hostnames and may need host-side troubleshooting.
+All four Caddy ports are bound to `127.0.0.1`. Verify access in the actual host OS
+browser; the Windows `\\wsl.localhost\Ubuntu` file-share path is unrelated to HTTP.
+
+Cookies are shared across ports on the same hostname. Dozzle's app cookie and
+the gateway's sign-in cookie have different names, so these two can use
+`localhost` together. Moving additional protected apps to `localhost` also
+requires addressing their shared `razcloud_app` cookie name.
 
 After updating an existing checkout, run `docker compose up --build -d` to
 rebuild the gateway and recreate the changed services and port binding. Existing
@@ -105,7 +134,8 @@ their submodules using host build networking, matching the gateway's standalone
 Compose setup. The broker provisions the gateway's and files' PostgreSQL databases;
 a separate Redis instance stores sessions with append-only persistence. Caddy
 checks every whoami/files request, including the SSO callback, with the gateway's
-`/forward_auth` endpoint before proxying it. Only Caddy publishes ports, bound to
+`/forward_auth` endpoint, and Dozzle requests with `/forward_auth/admin`, before
+proxying them. Only Caddy publishes ports, bound to
 loopback; the broker and data stores stay on an internal network. This setup
 is for local development; the Swarm deployment remains under `infra/`.
 

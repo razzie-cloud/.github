@@ -101,7 +101,7 @@
 ### infra
 
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Dragonfly,
-  the broker, access-gateway, files, Caddy Docker Proxy, and a whoami demo.
+  the broker, access-gateway, files, Dozzle, Caddy Docker Proxy, and a whoami demo.
   The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
   deployment labels and publishes ports 80/443.
 - `deploy.sh` creates missing external Docker secrets and deploys the stack.
@@ -143,6 +143,13 @@
   `127.0.0.1` for Windows/WSL2 browser access, and its own broker
   database, including secret records. The optional `storage-demo` profile adds a
   disposable in-memory S3 fixture with bucket `files-demo`; set S3_DEV_PASSWORD.
+  Dozzle uses `http://localhost:8083` (`DOZZLE_PORT`), with its own loopback Caddy
+  port. Host OS browsers have had ongoing Files/Whoami access issues under WSL2/VMs;
+  do not assume `.localhost` resolution or host forwarding works. See README.
+  Cookies span ports; other apps cannot share `localhost` without accounting for
+  their common `razcloud_app` cookie. Every Dozzle path uses `/forward_auth/admin`; Caddy
+  strips incoming identity and `Remote-*` headers. Dozzle maps the gateway's UUID
+  and username headers via `DOZZLE_AUTH_HEADER_USER`/`DOZZLE_AUTH_HEADER_NAME`.
   Root `Caddyfile` protects every whoami/files management path, including the SSO
   callback. Public share links use `shared-files.localhost` on the files port.
   Validate with `docker compose --env-file .env.example config --quiet`.
@@ -193,6 +200,10 @@ on them, and update this guide when they change.
   Set `FORWARD_AUTH_ORIGINS` to exact allowed app origins; `ORIGIN` is the public
   gateway URL. The stack includes access-gateway at `https://auth.razzie.cloud`
   and protects files and whoami with forward auth and verified identity headers.
+  Dozzle uses `https://logs.razzie.cloud` and `/forward_auth/admin` on every path,
+  including its callback. It runs globally in Swarm mode with a per-node settings
+  volume, private HTTP port, and container actions/shell disabled. Its image tag
+  is operator-selected via `DOZZLE_IMAGE_TAG` in `infra/.env`.
   The files route strips incoming identity headers before authentication.
   All management paths, including callbacks, are protected. The separate
   `shared-files.razzie.cloud` host exposes public `/s/*` and `/static/*` only,
