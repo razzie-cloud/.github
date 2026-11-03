@@ -1,4 +1,4 @@
-# razcloud
+# razzie-cloud
 
 A self-hosted platform with shared passkey sign-in, database provisioning, and an
 S3 file manager. This parent repository brings the services together for local
@@ -20,7 +20,7 @@ You need Git with GitHub SSH access and Docker with the Compose plugin, using a
 local Docker daemon. Go is only needed when running services outside containers.
 
 ```sh
-git clone --recurse-submodules git@github.com:razzie/razcloud.git
+git clone --recurse-submodules git@github.com:razzie-cloud/.github.git razcloud
 cd razcloud
 cp .env.example .env
 # Set POSTGRES_PASSWORD in .env to a random hex value, e.g. openssl rand -hex 24.

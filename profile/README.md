@@ -65,5 +65,5 @@ bootstrap token from its logs to create the administrator and enroll a passkey.
 
 See the [deployment guide](https://github.com/razzie-cloud/infra#readme) for host,
 domain, and configuration details, or the
-[parent repository](https://github.com/razzie/razcloud#readme) for the complete
+[parent repository](https://github.com/razzie-cloud/.github#readme) for the complete
 local Docker Compose demo.
