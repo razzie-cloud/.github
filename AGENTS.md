@@ -98,7 +98,8 @@
   create ordinary expiring shares; public password shares use scoped stateless
   HMAC tickets. Media requests preserve guarded storage and byte ranges. Local
   embedded controller assets load the external SDK only on casting pages;
-  hardware/CSP/CORS acceptance remains pending. See `docs/casting-design.md`.
+  hardware/CSP/CORS acceptance remains pending. See the
+  [Files Cast reference](files/docs/reference.md#google-cast).
 - S3 clients use a guarded loopback egress proxy for connection-time destination
   checks. Private/HTTP endpoints require exact operator-managed exceptions.
 - PostgreSQL integration tests require a disposable loopback `TEST_DATABASE_URL`;
@@ -151,7 +152,8 @@
   disposable in-memory S3 fixture with bucket `files-demo`; set S3_DEV_PASSWORD.
   Dozzle uses `http://localhost:8083` (`DOZZLE_PORT`), with its own loopback Caddy
   port. Host OS browsers have had ongoing Files/Whoami access issues under WSL2/VMs;
-  do not assume `.localhost` resolution or host forwarding works. See README.
+  do not assume `.localhost` resolution or host forwarding works. See
+  [host browser troubleshooting](docs/development.md#host-browser-troubleshooting).
   Cookies span ports; other apps cannot share `localhost` without accounting for
   their common `razcloud_app` cookie. Every Dozzle path uses `/forward_auth/admin`; Caddy
   strips incoming identity and `Remote-*` headers. Dozzle maps the gateway's UUID
