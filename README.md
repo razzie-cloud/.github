@@ -203,9 +203,11 @@ make deploy
 `latest-tags` uses Bash, Git, awk, and GNU coreutils (`sort -V`). It selects the highest
 numeric stable release tag (`MAJOR.MINOR.PATCH`, with an optional `v` prefix),
 fetches it into each service repository, and writes the image tags to ignored
-`infra/.env`. It preserves other settings and leaves branches, checkouts, and
-parent submodule pointers unchanged. Prereleases are excluded. Tag discovery
-does not verify that image publishing has finished.
+`infra/.env`. If an existing file lacks `DOZZLE_IMAGE_TAG`, it adds the default
+from `infra/.env.example`; an existing operator-selected value is preserved.
+It preserves other settings and leaves branches, checkouts, and parent submodule
+pointers unchanged. Prereleases are excluded. Tag discovery does not verify
+that image publishing has finished.
 
 The file is initialized from `infra/.env.example` when absent. Review it before
 deploying; edit it to pin older releases. `make config` and `make deploy` delegate
