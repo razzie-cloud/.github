@@ -98,6 +98,7 @@ services:
       POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/files/uri
       ORIGIN: http://files.localhost:${FILES_PORT:-8082}
       SHARE_ORIGIN: http://shared-files.localhost:${FILES_PORT:-8082}
+      CAST_SHARE_TTL: ${CAST_SHARE_TTL:-6h}
       # This exception is limited to the optional disposable S3 demo.
       S3_ALLOWED_PRIVATE_ENDPOINTS: s3-demo:9000
       S3_ALLOW_HTTP: "true"

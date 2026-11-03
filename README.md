@@ -15,6 +15,9 @@ The [files service plan](docs/files-service-plan.md) records its architecture an
 acceptance criteria. See [files/README.md](files/README.md) for configuration and
 secret-storage requirements.
 
+The [casting design](docs/casting-design.md) describes MP4 casting,
+browser-controlled photo slideshows, temporary shares, and device testing.
+
 ## Checkout
 
 Clone this parent repository with `git clone --recurse-submodules <parent-url>`.

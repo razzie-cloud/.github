@@ -93,6 +93,12 @@
   Configuration, credentials, and crypt passwords use owner-scoped PostgreSQL
   records. No files-specific secret volume or encryption key is required.
   IMPORT_SECRETS_DIR is a one-time option to import a legacy secrets volume.
+- Google Cast uses the Default Media Receiver: direct MP4 and browser-timed
+  JPEG/PNG slideshows. `CAST_SHARE_TTL` defaults to 6h, capped at 24h. Owner casts
+  create ordinary expiring shares; public password shares use scoped stateless
+  HMAC tickets. Media requests preserve guarded storage and byte ranges. Local
+  embedded controller assets load the external SDK only on casting pages;
+  hardware/CSP/CORS acceptance remains pending. See `docs/casting-design.md`.
 - S3 clients use a guarded loopback egress proxy for connection-time destination
   checks. Private/HTTP endpoints require exact operator-managed exceptions.
 - PostgreSQL integration tests require a disposable loopback `TEST_DATABASE_URL`;
