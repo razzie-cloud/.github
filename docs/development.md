@@ -13,7 +13,8 @@ from the project root against your local Docker daemon:
 
 ```sh
 cp .env.example .env
-# Replace POSTGRES_PASSWORD in .env with a random value, e.g. openssl rand -hex 24.
+# Set POSTGRES_PASSWORD and DRAGONFLY_PASSWORD to separate random hex values.
+# Generate each with: openssl rand -hex 24
 docker compose up --build -d
 docker compose logs access-gateway
 ```
@@ -22,40 +23,39 @@ Compose builds the gateway from the checked-out source and tags it as
 `ghcr.io/razzie-cloud/access-gateway:dev`. Override `ACCESS_GATEWAY_IMAGE_TAG`
 in `.env` to change the local build's tag.
 
-Find the `bootstrap.token_created` event and its `bootstrap_token` field in the gateway logs. Open <http://localhost:8080>, create
-the first administrator using that token and a passkey, then sign in. The token
+Find the `bootstrap.token_created` event and its `bootstrap_token` field in the
+gateway logs. Open <http://auth.localhost:8080>, create the first administrator
+using that token and a passkey, then sign in. The token
 is logged only when first generated; keep the initial logs until setup is done.
 
-Open <http://127.0.0.1:8081> for the protected `traefik/whoami` demo. It redirects
-to the gateway for sign-in, then returns to whoami with a separate app session.
+Open <http://whoami.localhost:8080> for the protected
+`traefik/whoami` demo. It redirects to the gateway for sign-in, then returns to
+whoami with a separate app session.
 Whoami displays the verified `X-Auth-Request-User` and `X-Auth-Request-Name`
 headers. Signing out at the gateway revokes access to the demo.
 
-Use the exact hostnames above to keep their host-only cookies separate:
-`localhost` for the gateway and `127.0.0.1` for whoami. Both are loopback HTTP origins,
-so local passkeys work without certificates or hosts-file changes. `AUTH_PORT`
-and `WHOAMI_PORT` in `.env` can override the default ports; use those ports in
-your browser too. Keep them distinct and use URI-unreserved characters for
-`POSTGRES_PASSWORD`, as documented in `.env.example`.
+Use the exact hostnames above to keep their host-only cookies separate. Modern
+browsers resolve `.localhost` names to loopback and treat HTTP on these hosts as
+secure contexts, allowing passkeys without certificates. All local services use
+port `8080`; `LOCAL_PORT` in `.env` changes that port for every hostname. Use the
+same port in your browser and URI-unreserved characters for `POSTGRES_PASSWORD`
+and `DRAGONFLY_PASSWORD`, as documented in `.env.example`.
 
-Open <http://files.localhost:8082> for the files UI (`FILES_PORT` overrides its
-port). Use this exact hostname to isolate its app cookie from the gateway and
-whoami: host-only cookies are shared across ports on the same host.
-Opening `http://localhost:8082` or `http://127.0.0.1:8082` redirects to
-`files.localhost`, preserving the requested path and query string.
-Public share links use `http://shared-files.localhost:8082/s/<token>` on the same
-`FILES_PORT`. Use **Share** beside an entry or **Sharing** in the directory toolbar
+Open <http://files.localhost:8080> for the files UI. Use this exact hostname to
+isolate its app cookie from the gateway and whoami: host-only cookies are shared
+across ports on the same host. Public share links use
+`http://shared-files.localhost:8080/s/<token>` on the same shared port.
+Use **Share** beside an entry or **Sharing** in the directory toolbar
 to create read-only file/folder links with an optional password. The sharing
 hostname permits unauthenticated visitors and only exposes share/static routes;
 the files management hostname keeps forward authentication on every path.
 
-Open <http://localhost:8083> for Dozzle's container logs (`DOZZLE_PORT`
-overrides the port; `DOZZLE_IMAGE_TAG` selects its image). It requires an
-administrator account: every request, including `/_auth/callback`, goes through
-the gateway's `/forward_auth/admin` endpoint. Regular users receive 403.
-Opening `127.0.0.1` on this port redirects to `localhost`, preserving the path
-and query string. Dozzle has no directly published port; Caddy
-is its only host entry point. Container actions and shell access are disabled.
+Open <http://logs.localhost:8080> for Dozzle's container logs
+(`DOZZLE_IMAGE_TAG` selects its image). It requires an administrator account:
+every request, including `/_auth/callback`, goes through the gateway's
+`/forward_auth/admin` endpoint. Regular users receive 403.
+Dozzle has no directly published port; Caddy is its only host entry point.
+Container actions and shell access are disabled.
 
 Dozzle's [forward-proxy authentication](https://dozzle.dev/guide/authentication/forward-proxy)
 normally reads `Remote-User`, `Remote-Name`, and optional `Remote-Email`,
@@ -70,28 +70,24 @@ setup against a trusted local daemon.
 
 ### Host browser troubleshooting
 
-Host OS browser access has been an ongoing issue with the Files and Whoami
-local routes when Docker runs inside WSL2 or a VM. A successful request inside
-the development environment does not establish that a browser on the host OS
-can reach the same URL. In particular, `.localhost` names such as
-`files.localhost` and `dozzle.localhost` have not worked reliably in this setup;
-publishing a loopback port alone does not fix host-side name resolution or
-forwarding. Dozzle therefore uses plain `localhost` on its own port, `8083`,
-without redirecting to a `.localhost` name. The Files and Whoami routes above
-still use their existing hostnames and may need host-side troubleshooting.
-All four Caddy ports are bound to `127.0.0.1`. Verify access in the actual host OS
-browser; the Windows `\\wsl.localhost\Ubuntu` file-share path is unrelated to HTTP.
+Caddy publishes one HTTP port, bound to `127.0.0.1`, and routes requests by their
+`.localhost` hostname. Host-browser access to an HTTP server in WSL2 using
+`app.localhost:8080` has been verified in this setup. With WSL2/VMs, check
+loopback forwarding and hostname resolution in the actual host OS browser if
+an app is unreachable; a successful request inside Linux alone does not verify
+host browser access.
 
-Cookies are shared across ports on the same hostname. Dozzle's app cookie and
-the gateway's sign-in cookie have different names, so these two can use
-`localhost` together. Moving additional protected apps to `localhost` also
-requires addressing their shared `razcloud_app` cookie name.
+Keep the separate hostnames: app cookies are shared across ports on the same
+host. Use HTTP and the shared `LOCAL_PORT`, rather than opening the IP address.
+In the gateway page's browser console, `window.isSecureContext` should be `true`
+and `typeof PublicKeyCredential` should be `"function"` for passkey support.
 
-After updating an existing checkout, run `docker compose up --build -d` to
-rebuild the gateway and recreate the changed services and port binding. Existing
-accounts and gateway sessions are preserved; open the new Files URL and sign in
-if needed. For command-line clients that do not resolve `.localhost`, use
-`curl --resolve files.localhost:8082:127.0.0.1 http://files.localhost:8082/`.
+For command-line clients that do not resolve `.localhost`, use an explicit
+loopback mapping:
+
+```sh
+curl --resolve files.localhost:8080:127.0.0.1 http://files.localhost:8080/
+```
 
 ### Disposable S3 demo
 
@@ -109,18 +105,24 @@ these credentials with the local demo.
 
 The root [docker-compose.yml](../docker-compose.yml) builds all three Go services from
 their submodules using host build networking, matching the gateway's standalone
-Compose setup. The broker provisions the gateway's and files' PostgreSQL databases;
-a separate Redis instance stores sessions with append-only persistence. Caddy
+Compose setup. The broker provisions the gateway's and files' PostgreSQL databases
+and the gateway's Redis-compatible Dragonfly namespace. The gateway discovers
+its credentials through `REDIS_URI_FROM`. Dragonfly requires the local
+`DRAGONFLY_PASSWORD`; `DRAGONFLY_IMAGE_TAG` selects its image. The broker waits
+for both PostgreSQL and Dragonfly health checks before starting. Caddy
 checks every whoami/files request, including the SSO callback, with the gateway's
 `/forward_auth` endpoint, and Dozzle requests with `/forward_auth/admin`, before
-proxying them. Only Caddy publishes ports, bound to
-loopback; the broker and data stores stay on an internal network. This setup
+proxying them. Only Caddy publishes a port, bound to loopback; the broker and
+data stores stay on an internal network. This setup
 is for local development; the Swarm deployment remains under `infra/`.
 
-PostgreSQL and Redis use named volumes, preserving state across
-container recreation. Stop the stack with `docker compose down`. To deliberately
-erase local accounts, sessions, files configuration, and crypt recovery secrets, use
-`docker compose down --volumes`.
+PostgreSQL and Dozzle settings use named volumes, preserving accounts, files
+configuration, and log viewer settings across container recreation. Dragonfly
+runs without persistence, matching the Swarm stack; its sessions and broker
+namespace credentials are not durable across container recreation. Restart the
+gateway afterward so it fetches fresh credentials from the broker. Stop the stack with
+`docker compose down`. To deliberately erase local accounts, files configuration,
+and crypt recovery secrets, use `docker compose down --volumes`.
 
 Validate the configuration without starting containers:
 

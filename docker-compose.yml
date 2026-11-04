@@ -17,15 +17,19 @@ services:
       timeout: 2s
       retries: 30
 
-  redis:
-    image: redis:8-alpine
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - redis_data:/data
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:${DRAGONFLY_IMAGE_TAG:-latest}
+    command:
+      - dragonfly
+      - --requirepass=${DRAGONFLY_PASSWORD:?Set DRAGONFLY_PASSWORD in .env (see .env.example)}
+      - --bind=0.0.0.0
+      - --port=6379
+    environment:
+      REDISCLI_AUTH: ${DRAGONFLY_PASSWORD:?Set DRAGONFLY_PASSWORD in .env (see .env.example)}
     networks:
       - backend
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-h", "127.0.0.1", "ping"]
       interval: 2s
       timeout: 2s
       retries: 30
@@ -36,10 +40,13 @@ services:
       network: host
     environment:
       POSTGRES_URI: postgres://broker:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}@postgres:5432/broker?sslmode=disable
+      DRAGONFLY_URI: redis://:${DRAGONFLY_PASSWORD:?Set DRAGONFLY_PASSWORD in .env (see .env.example)}@dragonfly:6379/0
     networks:
       - backend
     depends_on:
       postgres:
+        condition: service_healthy
+      dragonfly:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/readyz"]
@@ -55,20 +62,18 @@ services:
       network: host
     environment:
       POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/access_gateway/uri
-      REDIS_URI: redis://redis:6379/0
-      ORIGIN: http://localhost:${AUTH_PORT:-8080}
-      RP_ID: localhost
+      REDIS_URI_FROM: http://database-broker:8080/v1/instances/redis/access_gateway/uri
+      ORIGIN: http://auth.localhost:${LOCAL_PORT:-8080}
+      RP_ID: auth.localhost
       RP_NAME: Razcloud local
       # Gateway ports are private; Caddy reaches it over Docker networks.
       TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
-      FORWARD_AUTH_ORIGINS: http://127.0.0.1:${WHOAMI_PORT:-8081},http://files.localhost:${FILES_PORT:-8082},http://localhost:${DOZZLE_PORT:-8083}
+      FORWARD_AUTH_ORIGINS: http://whoami.localhost:${LOCAL_PORT:-8080},http://files.localhost:${LOCAL_PORT:-8080},http://logs.localhost:${LOCAL_PORT:-8080}
     networks:
       - backend
       - web
     depends_on:
       database-broker:
-        condition: service_healthy
-      redis:
         condition: service_healthy
 
   whoami:
@@ -96,8 +101,8 @@ services:
       network: host
     environment:
       POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/files/uri
-      ORIGIN: http://files.localhost:${FILES_PORT:-8082}
-      SHARE_ORIGIN: http://shared-files.localhost:${FILES_PORT:-8082}
+      ORIGIN: http://files.localhost:${LOCAL_PORT:-8080}
+      SHARE_ORIGIN: http://shared-files.localhost:${LOCAL_PORT:-8080}
       CAST_SHARE_TTL: ${CAST_SHARE_TTL:-6h}
       # This exception is limited to the optional disposable S3 demo.
       S3_ALLOWED_PRIVATE_ENDPOINTS: s3-demo:9000
@@ -123,16 +128,10 @@ services:
   caddy:
     image: caddy:2-alpine
     environment:
-      AUTH_PORT: ${AUTH_PORT:-8080}
-      WHOAMI_PORT: ${WHOAMI_PORT:-8081}
-      FILES_PORT: ${FILES_PORT:-8082}
-      DOZZLE_PORT: ${DOZZLE_PORT:-8083}
+      LOCAL_PORT: ${LOCAL_PORT:-8080}
     ports:
-      - "127.0.0.1:${AUTH_PORT:-8080}:${AUTH_PORT:-8080}"
-      - "127.0.0.1:${WHOAMI_PORT:-8081}:${WHOAMI_PORT:-8081}"
-      # Loopback bindings; see README for host OS browser limitations.
-      - "127.0.0.1:${FILES_PORT:-8082}:${FILES_PORT:-8082}"
-      - "127.0.0.1:${DOZZLE_PORT:-8083}:${DOZZLE_PORT:-8083}"
+      # Caddy routes all local hostnames through this loopback port.
+      - "127.0.0.1:${LOCAL_PORT:-8080}:${LOCAL_PORT:-8080}"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     networks:
@@ -155,5 +154,4 @@ networks:
 
 volumes:
   postgres_data:
-  redis_data:
   dozzle_data:

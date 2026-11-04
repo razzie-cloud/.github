@@ -2,11 +2,11 @@
 	admin off
 }
 
-http://localhost:{$AUTH_PORT:8080} {
+http://auth.localhost:{$LOCAL_PORT:8080} {
 	reverse_proxy access-gateway:8080
 }
 
-http://127.0.0.1:{$WHOAMI_PORT:8081} {
+http://whoami.localhost:{$LOCAL_PORT:8080} {
 	route {
 		request_header -X-Auth-Request-User
 		request_header -X-Auth-Request-Name
@@ -22,12 +22,7 @@ http://127.0.0.1:{$WHOAMI_PORT:8081} {
 	}
 }
 
-# Keep app cookies on their own hostname, including when opened via localhost.
-http://localhost:{$FILES_PORT:8082}, http://127.0.0.1:{$FILES_PORT:8082} {
-	redir http://files.localhost:{$FILES_PORT:8082}{uri} 302
-}
-
-http://files.localhost:{$FILES_PORT:8082} {
+http://files.localhost:{$LOCAL_PORT:8080} {
 	route {
 		request_header -X-Auth-Request-User
 		request_header -X-Auth-Request-Name
@@ -39,12 +34,7 @@ http://files.localhost:{$FILES_PORT:8082} {
 	}
 }
 
-# Use localhost for browsers running on the host OS outside WSL2/VMs.
-http://127.0.0.1:{$DOZZLE_PORT:8083} {
-	redir http://localhost:{$DOZZLE_PORT:8083}{uri} 302
-}
-
-http://localhost:{$DOZZLE_PORT:8083} {
+http://logs.localhost:{$LOCAL_PORT:8080} {
 	route {
 		request_header -X-Auth-Request-User
 		request_header -X-Auth-Request-Name
@@ -60,7 +50,7 @@ http://localhost:{$DOZZLE_PORT:8083} {
 }
 
 # Capability routes are public and isolated from the authenticated files UI.
-http://shared-files.localhost:{$FILES_PORT:8082} {
+http://shared-files.localhost:{$LOCAL_PORT:8080} {
 	route {
 		request_header -X-Auth-Request-User
 		request_header -X-Auth-Request-Name

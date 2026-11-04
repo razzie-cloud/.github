@@ -141,26 +141,35 @@
 - Each service has its own Dockerfile and Compose file. The gateway/broker stacks both
   publish ports 5432 and 8080; run them separately or adjust host port mappings.
 - The parent `docker-compose.yml` builds all three services and runs a local auth
-  demo with PostgreSQL, Redis, Caddy, and traefik/whoami. Copy `.env.example` to
-  `.env` and set a local PostgreSQL password before starting. Caddy publishes
-  loopback ports: gateway `http://localhost:8080`, whoami `http://127.0.0.1:8081`.
-  `AUTH_PORT`/`WHOAMI_PORT` override those ports. The broker provisions the
-  gateway's and files' PostgreSQL databases; sessions use a separate persistent Redis.
-  Files uses `http://files.localhost:8082` (`FILES_PORT`), published on
-  `127.0.0.1` for Windows/WSL2 browser access, and its own broker
-  database, including secret records. The optional `storage-demo` profile adds a
-  disposable in-memory S3 fixture with bucket `files-demo`; set S3_DEV_PASSWORD.
-  Dozzle uses `http://localhost:8083` (`DOZZLE_PORT`), with its own loopback Caddy
-  port. Host OS browsers have had ongoing Files/Whoami access issues under WSL2/VMs;
-  do not assume `.localhost` resolution or host forwarding works. See
+  demo with PostgreSQL, Dragonfly, Caddy, and traefik/whoami. Copy `.env.example`
+  to `.env` and set separate local `POSTGRES_PASSWORD` and `DRAGONFLY_PASSWORD`
+  values before starting. Caddy publishes a single loopback HTTP port, `8080`,
+  and routes by hostname: gateway
+  `http://auth.localhost:8080`, whoami `http://whoami.localhost:8080`, Files
+  `http://files.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
+  `LOCAL_PORT` overrides the shared port. The broker provisions the gateway's
+  and files' PostgreSQL databases and the gateway's Dragonfly namespace; the
+  gateway uses `REDIS_URI_FROM` for credentials. Dragonfly is private to the
+  backend network and uses `DRAGONFLY_IMAGE_TAG` (default `latest`). The broker
+  waits for both backend health checks. Dragonfly runs without persistence,
+  matching the Swarm stack; restart the gateway after Dragonfly restarts so it
+  fetches fresh namespace credentials. PostgreSQL records remain persistent.
+  Files stores its configuration and secret records in its broker database.
+  The optional `storage-demo` profile adds a disposable in-memory S3 fixture
+  with bucket `files-demo`; set S3_DEV_PASSWORD. Modern browsers resolve
+  `.localhost` to loopback and permit passkeys over HTTP without certificates.
+  Gateway `RP_ID` is `auth.localhost`.
+  Host-browser HTTP access through `.localhost` in WSL2 has been verified;
+  forwarding and resolution must still work on the browser's host. See
   [host browser troubleshooting](docs/development.md#host-browser-troubleshooting).
-  Cookies span ports; other apps cannot share `localhost` without accounting for
+  Cookies span ports; apps must use separate hostnames to avoid sharing
   their common `razcloud_app` cookie. Every Dozzle path uses `/forward_auth/admin`; Caddy
   strips incoming identity and `Remote-*` headers. Dozzle maps the gateway's UUID
   and username headers via `DOZZLE_AUTH_HEADER_USER`/`DOZZLE_AUTH_HEADER_NAME`.
   Root `Caddyfile` protects every whoami/files management path, including the SSO
-  callback. Public share links use `shared-files.localhost` on the files port.
-  Validate with `docker compose --env-file .env.example config --quiet`.
+  callback. Public share links use `http://shared-files.localhost:8080/s/<token>`
+  on the same shared port. Validate with
+  `docker compose --env-file .env.example config --quiet`.
 - Validate shell edits with `bash -n infra/deploy.sh`. With the Compose plugin installed,
   validate each service using `docker compose -f <service>/docker-compose.yml config --quiet`.
 - Validate stack edits without deploying:

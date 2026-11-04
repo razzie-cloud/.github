@@ -23,7 +23,8 @@ local Docker daemon. Go is only needed when running services outside containers.
 git clone --recurse-submodules git@github.com:razzie-cloud/.github.git razcloud
 cd razcloud
 cp .env.example .env
-# Set POSTGRES_PASSWORD in .env to a random hex value, e.g. openssl rand -hex 24.
+# Set POSTGRES_PASSWORD and DRAGONFLY_PASSWORD to separate random hex values.
+# Generate each with: openssl rand -hex 24
 docker compose up --build -d
 docker compose logs access-gateway
 ```
@@ -31,20 +32,25 @@ docker compose logs access-gateway
 For an existing checkout, initialize missing components with
 `git submodule update --init --recursive` after checking for local changes.
 
+The stack uses HTTP on `*.localhost`. Modern browsers treat these as local
+secure contexts, so passkeys work without certificates or trust installation.
+
 Find the `bootstrap.token_created` log event and its `bootstrap_token` field.
 Open the gateway, create your first administrator with that token and a passkey,
 then sign in. The token is logged only once when generated.
 
 | Local URL | Use |
 | --- | --- |
-| <http://localhost:8080> | Gateway: sign in, add users, and enroll devices |
-| <http://127.0.0.1:8081> | Whoami: see the identity passed to a protected app |
-| <http://files.localhost:8082> | Files: connect your S3 storage and add a directory |
-| <http://localhost:8083> | Dozzle: view container logs as an administrator |
+| <http://auth.localhost:8080> | Gateway: sign in, add users, and enroll devices |
+| <http://whoami.localhost:8080> | Whoami: see the identity passed to a protected app |
+| <http://files.localhost:8080> | Files: connect your S3 storage and add a directory |
+| <http://logs.localhost:8080> | Dozzle: view container logs as an administrator |
+| <http://shared-files.localhost:8080> | Public share host: open a link created in Files; the root returns 404 |
 
 Use these exact hostnames: app cookies are shared across ports on the same host.
-Ports can be changed in `.env`. WSL2/VM host browsers may need additional hostname
-or forwarding setup; see [local troubleshooting](docs/development.md#host-browser-troubleshooting).
+All services share port `8080`; `LOCAL_PORT` in `.env` changes it for every URL.
+WSL2/VM host browsers need working loopback forwarding; see
+[local troubleshooting](docs/development.md#host-browser-troubleshooting).
 
 To try Files without cloud storage, follow the
 [disposable S3 demo](docs/development.md#disposable-s3-demo). Stop the stack with
