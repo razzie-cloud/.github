@@ -55,6 +55,9 @@
   and logs the raw token once. Treat that token as a credential. Sessions live
   in Redis and survive gateway restarts. Replicas share sessions when configured
   with the same public ORIGIN and Redis backend/database.
+  Goose migrations use a PostgreSQL session lock. Bootstrap initialization and
+  enrollment share a transaction advisory lock; only the committed token's
+  creator logs it, and startup cannot overwrite or recreate a consumed token.
 
 ### database-broker
 
@@ -74,6 +77,12 @@
 - Configuration uses `SERVICE_PORT` (default `8080`), `POSTGRES_URI`,
   `POSTGRES_PASSWORD_FILE`, `DRAGONFLY_URI`, and `DRAGONFLY_PASSWORD_FILE`, with
   matching flags. Each backend is registered only when its URI is supplied.
+- PostgreSQL migrations use an outer transaction advisory lock. Provisioning
+  takes a per-instance session lock and uses the same pinned connection for
+  CREATE DATABASE and the metadata/role transaction. Dragonfly atomically
+  reserves canonical credentials at `instance-pending:<name>` before applying
+  ACLs and publishing `instance:<name>`; retain reservations without expiry so
+  concurrent requests and failed provisioning retries use the same password.
 
 ### files
 
@@ -138,6 +147,10 @@
   tests use testcontainers to start PostgreSQL and Dragonfly and pull images
   if necessary. They do not skip themselves when Docker is unavailable.
   Ensure the daemon is local/disposable, not the production Docker context.
+  Alternatively set disposable loopback `TEST_DATABASE_URL` and
+  `TEST_DRAGONFLY_URL` for native backends. PostgreSQL tests create/drop databases
+  and roles; Dragonfly requires an empty broker registry and cleans up metadata,
+  reservations, and ACL users. See `database-broker/AGENTS.md`.
 - Each service has its own Dockerfile and Compose file. The gateway/broker stacks both
   publish ports 5432 and 8080; run them separately or adjust host port mappings.
 - The parent `docker-compose.yml` builds all three services and runs a local auth
