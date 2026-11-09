@@ -127,6 +127,8 @@
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Valkey,
   the broker, access-gateway, files, public RazChess/UUID/GeoIP/0x40hues apps, Dozzle,
   Caddy Docker Proxy, a public landing page at `razzie.cloud`, and a whoami demo.
+  Swarm's `DOMAIN` setting defaults to `razzie.cloud` and controls public hostnames,
+  auth origins, and landing-page links and metadata.
   `infra/landing/` packages the static page in `ghcr.io/razzie-cloud/landing`;
   build/publish it before selecting `LANDING_IMAGE_TAG` in infra's environment.
   The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
