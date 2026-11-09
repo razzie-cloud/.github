@@ -128,7 +128,8 @@
   the broker, access-gateway, files, public RazChess/UUID/GeoIP/0x40hues apps, Dozzle,
   Caddy Docker Proxy, and a whoami demo.
   The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
-  deployment labels and publishes ports 80/443.
+  deployment labels and publishes ports 80/443 in host mode to preserve visitor
+  IPs for GeoIP. Public DNS targets the manager running Caddy.
   RazChess and GeoIP use `--redis-from` with separate Valkey instances. Their
   startup wrappers wait for broker readiness; RazChess stays at one replica.
   Its default session loader uses `SCAN`, compatible with broker ACLs. See
