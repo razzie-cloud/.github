@@ -7,7 +7,7 @@ use and tracks their independent repositories as Git submodules.
 | Repository | What it does |
 | --- | --- |
 | [access-gateway](access-gateway/README.md) | Passkey accounts, device enrollment, user management, and shared sign-in for protected apps |
-| [database-broker](database-broker/README.md) | Creates per-service PostgreSQL databases and Dragonfly namespaces and returns their connection URIs |
+| [database-broker](database-broker/README.md) | Creates per-service PostgreSQL and Valkey databases and returns their connection URIs |
 | [files](files/README.md) | Browse, upload, and share S3 files, with optional rclone encryption |
 | [infra](infra/README.md) | Deploys the platform with Docker Swarm and Caddy; includes optional NixOS host configuration |
 
@@ -23,7 +23,7 @@ local Docker daemon. Go is only needed when running services outside containers.
 git clone --recurse-submodules git@github.com:razzie-cloud/.github.git razcloud
 cd razcloud
 cp .env.example .env
-# Set POSTGRES_PASSWORD and DRAGONFLY_PASSWORD to separate random hex values.
+# Set POSTGRES_PASSWORD and VALKEY_PASSWORD to separate random hex values.
 # Generate each with: openssl rand -hex 24
 docker compose up --build -d
 docker compose logs access-gateway

@@ -66,8 +66,10 @@
 - `internal/config/` reads CLI flags and environment variables, including
   password files. `internal/router/` uses chi for HTTP routing;
   `internal/broker/` validates instance names and selects adapters.
-- `internal/adapter/` defines shared interfaces and implements PostgreSQL and
-  Dragonfly adapters. `redis` and `dragonfly` select the same Dragonfly adapter.
+- `internal/adapter/` defines shared interfaces and implements PostgreSQL,
+  Dragonfly, and Valkey adapters. `redis` and `dragonfly` select the same
+  Dragonfly adapter; `valkey` requires standalone Valkey 9.1.0+ with numbered
+  database ACLs.
   PostgreSQL metadata migrations use go-rel/migration, separate from the
   gateway's Goose migrations.
 - `GET /v1/instances/{adapter}` lists instances. The corresponding
@@ -75,14 +77,20 @@
   return credentials. These GET requests can mutate real databases; use local
   backends for development and keep the broker on the internal network.
 - Configuration uses `SERVICE_PORT` (default `8080`), `POSTGRES_URI`,
-  `POSTGRES_PASSWORD_FILE`, `DRAGONFLY_URI`, and `DRAGONFLY_PASSWORD_FILE`, with
-  matching flags. Each backend is registered only when its URI is supplied.
+  `POSTGRES_PASSWORD_FILE`, `DRAGONFLY_URI`, `DRAGONFLY_PASSWORD_FILE`, `VALKEY_URI`,
+  and `VALKEY_PASSWORD_FILE`, with matching flags. Each backend is registered
+  only when its URI is supplied.
 - PostgreSQL migrations use an outer transaction advisory lock. Provisioning
   takes a per-instance session lock and uses the same pinned connection for
   CREATE DATABASE and the metadata/role transaction. Dragonfly atomically
   reserves canonical credentials at `instance-pending:<name>` before applying
   ACLs and publishing `instance:<name>`; retain reservations without expiry so
   concurrent requests and failed provisioning retries use the same password.
+  Valkey atomically reserves database numbers and canonical credentials with
+  WATCH/MULTI/EXEC, excludes the metadata database, and denies pub/sub commands
+  and channels for every provisioned user. Retain its reservations and ownership
+  registry indefinitely. With `aclfile` configured, save ACLs before publishing
+  credentials; keep the ACL file with RDB/AOF backups. See `database-broker/AGENTS.md`.
 
 ### files
 
@@ -116,7 +124,7 @@
 
 ### infra
 
-- `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Dragonfly,
+- `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Valkey,
   the broker, access-gateway, files, Dozzle, Caddy Docker Proxy, and a whoami demo.
   The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
   deployment labels and publishes ports 80/443.
@@ -144,29 +152,33 @@
 - Broker unit tests without Docker:
   `cd database-broker && go test ./internal/config ./internal/broker ./internal/router ./internal/util`.
 - Broker full suite: `cd database-broker && go test ./...`. Adapter integration
-  tests use testcontainers to start PostgreSQL and Dragonfly and pull images
+  tests use testcontainers to start PostgreSQL, Dragonfly, and Valkey and pull images
   if necessary. They do not skip themselves when Docker is unavailable.
   Ensure the daemon is local/disposable, not the production Docker context.
-  Alternatively set disposable loopback `TEST_DATABASE_URL` and
-  `TEST_DRAGONFLY_URL` for native backends. PostgreSQL tests create/drop databases
+  Alternatively set disposable loopback `TEST_DATABASE_URL`, `TEST_DRAGONFLY_URL`,
+  and `TEST_VALKEY_URL` for native backends. PostgreSQL tests create/drop databases
   and roles; Dragonfly requires an empty broker registry and cleans up metadata,
   reservations, and ACL users. See `database-broker/AGENTS.md`.
+  Valkey tests require an empty dedicated server with only the default admin and
+  clean up all test data/users; its container fallback uses Valkey 9.1.0.
 - Each service has its own Dockerfile and Compose file. The gateway/broker stacks both
   publish ports 5432 and 8080; run them separately or adjust host port mappings.
 - The parent `docker-compose.yml` builds all three services and runs a local auth
-  demo with PostgreSQL, Dragonfly, Caddy, and traefik/whoami. Copy `.env.example`
-  to `.env` and set separate local `POSTGRES_PASSWORD` and `DRAGONFLY_PASSWORD`
+  demo with PostgreSQL, Valkey, Caddy, and traefik/whoami. Copy `.env.example`
+  to `.env` and set separate local `POSTGRES_PASSWORD` and `VALKEY_PASSWORD`
   values before starting. Caddy publishes a single loopback HTTP port, `8080`,
   and routes by hostname: gateway
   `http://auth.localhost:8080`, whoami `http://whoami.localhost:8080`, Files
   `http://files.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
   `LOCAL_PORT` overrides the shared port. The broker provisions the gateway's
-  and files' PostgreSQL databases and the gateway's Dragonfly namespace; the
-  gateway uses `REDIS_URI_FROM` for credentials. Dragonfly is private to the
-  backend network and uses `DRAGONFLY_IMAGE_TAG` (default `latest`). The broker
-  waits for both backend health checks. Dragonfly runs without persistence,
-  matching the Swarm stack; restart the gateway after Dragonfly restarts so it
-  fetches fresh namespace credentials. PostgreSQL records remain persistent.
+  and files' PostgreSQL databases and the gateway's numbered Valkey database;
+  the gateway uses `REDIS_URI_FROM` with the `valkey` adapter path for credentials.
+  Valkey is private to the backend network and uses `VALKEY_IMAGE_TAG` (9.1.0+).
+  Database 0 stores broker metadata; 15 other databases are available to apps.
+  The broker waits for both backend health checks. Both stacks persist Valkey
+  AOF data and ACLs in `valkey_data`; the broker saves configured ACL files before
+  publishing credentials. Initial admin credentials are hashed into the ACL file;
+  environment/secret changes alone do not rotate an existing volume's password.
   Files stores its configuration and secret records in its broker database.
   The optional `storage-demo` profile adds a disposable in-memory S3 fixture
   with bucket `files-demo`; set S3_DEV_PASSWORD. Modern browsers resolve

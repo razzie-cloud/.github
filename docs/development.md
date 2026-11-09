@@ -13,7 +13,7 @@ from the project root against your local Docker daemon:
 
 ```sh
 cp .env.example .env
-# Set POSTGRES_PASSWORD and DRAGONFLY_PASSWORD to separate random hex values.
+# Set POSTGRES_PASSWORD and VALKEY_PASSWORD to separate random hex values.
 # Generate each with: openssl rand -hex 24
 docker compose up --build -d
 docker compose logs access-gateway
@@ -39,7 +39,7 @@ browsers resolve `.localhost` names to loopback and treat HTTP on these hosts as
 secure contexts, allowing passkeys without certificates. All local services use
 port `8080`; `LOCAL_PORT` in `.env` changes that port for every hostname. Use the
 same port in your browser and URI-unreserved characters for `POSTGRES_PASSWORD`
-and `DRAGONFLY_PASSWORD`, as documented in `.env.example`.
+and `VALKEY_PASSWORD`, as documented in `.env.example`.
 
 Open <http://files.localhost:8080> for the files UI. Use this exact hostname to
 isolate its app cookie from the gateway and whoami: host-only cookies are shared
@@ -106,23 +106,33 @@ these credentials with the local demo.
 The root [docker-compose.yml](../docker-compose.yml) builds all three Go services from
 their submodules using host build networking, matching the gateway's standalone
 Compose setup. The broker provisions the gateway's and files' PostgreSQL databases
-and the gateway's Redis-compatible Dragonfly namespace. The gateway discovers
-its credentials through `REDIS_URI_FROM`. Dragonfly requires the local
-`DRAGONFLY_PASSWORD`; `DRAGONFLY_IMAGE_TAG` selects its image. The broker waits
-for both PostgreSQL and Dragonfly health checks before starting. Caddy
+and the gateway's numbered Valkey database. The gateway discovers
+its credentials through `REDIS_URI_FROM` using `/v1/instances/valkey/access_gateway/uri`.
+Valkey requires the local `VALKEY_PASSWORD`; `VALKEY_IMAGE_TAG` selects a 9.1.0+
+image with database ACL support. Database 0 holds broker metadata; the other 15
+databases are available to applications. The broker waits for both PostgreSQL
+and Valkey health checks before starting. Caddy
 checks every whoami/files request, including the SSO callback, with the gateway's
 `/forward_auth` endpoint, and Dozzle requests with `/forward_auth/admin`, before
 proxying them. Only Caddy publishes a port, bound to loopback; the broker and
 data stores stay on an internal network. This setup
 is for local development; the Swarm deployment remains under `infra/`.
 
-PostgreSQL and Dozzle settings use named volumes, preserving accounts, files
-configuration, and log viewer settings across container recreation. Dragonfly
-runs without persistence, matching the Swarm stack; its sessions and broker
-namespace credentials are not durable across container recreation. Restart the
-gateway afterward so it fetches fresh credentials from the broker. Stop the stack with
-`docker compose down`. To deliberately erase local accounts, files configuration,
-and crypt recovery secrets, use `docker compose down --volumes`.
+PostgreSQL, Valkey, and Dozzle use named volumes, preserving accounts, files
+configuration, sessions, broker credentials, and log viewer settings across
+container recreation. Valkey uses AOF with an every-second fsync and a separate
+ACL file; the broker saves ACLs before publishing new credentials. Keep both
+together in backups. The initial admin password is hashed into the ACL file on
+first start; changing `.env` alone does not rotate it in an existing volume.
+Stop the stack with
+`docker compose down`. To deliberately erase local accounts, sessions, broker credentials, files
+configuration, and crypt recovery secrets, use `docker compose down --volumes`.
+
+When updating an existing Dragonfly demo, rename `DRAGONFLY_PASSWORD` to
+`VALKEY_PASSWORD` in `.env`, remove `DRAGONFLY_IMAGE_TAG`, and add
+`VALKEY_IMAGE_TAG` from `.env.example`. Start the stack again and sign in again.
+PostgreSQL accounts and passkeys remain; Dragonfly sessions are not migrated.
+The old Dragonfly container can be removed explicitly after the switch is verified.
 
 Validate the configuration without starting containers:
 
@@ -141,7 +151,7 @@ directory; this parent has no Go module or workspace.
 (cd files && go build ./... && go vet ./... && go test ./...)
 ```
 
-The broker's full `go test ./...` suite also starts PostgreSQL and Dragonfly
+The broker's full `go test ./...` suite also starts PostgreSQL, Dragonfly, and Valkey
 containers through testcontainers and needs a reachable local Docker daemon.
 See [AGENTS.md](../AGENTS.md) for architecture, configuration, checks, and current
 integration limitations. See [database-broker/README.md](../database-broker/README.md)
