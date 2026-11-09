@@ -64,7 +64,10 @@ awk -v broker="${tags[0]}" -v gateway="${tags[1]}" -v files="${tags[2]}" \
     sub(/^[[:space:]]*export[[:space:]]+/, "", key)
     gsub(/[[:space:]=]/, "", key)
     if (key in tags) {
-      if (!seen[key]++) print key "=" tags[key]
+      if (!seen[key]++) {
+        if (key == "DOZZLE_IMAGE_TAG") print
+        else print key "=" tags[key]
+      }
       next
     }
   }

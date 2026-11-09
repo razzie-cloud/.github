@@ -188,9 +188,12 @@ make deploy
 ```
 
 `latest-tags` uses Bash, Git, awk, and GNU coreutils (`sort -V`). It selects the highest
-numeric stable release tag (`MAJOR.MINOR.PATCH`, with an optional `v` prefix),
-fetches it into each service repository, and writes the image tags to ignored
-`infra/.env`. If an existing file lacks `DOZZLE_IMAGE_TAG`, it adds the default
+numeric stable release tag (`MAJOR.MINOR.PATCH`, with an optional `v` prefix)
+for the three platform services, fetches it into each service repository, and
+writes those image tags to ignored `infra/.env`. RazChess, UUID, GeoIP and 0x40hues use
+fixed stack defaults with optional overrides in `.env`; this command does not
+query their remotes or change their overrides.
+If an existing file lacks `DOZZLE_IMAGE_TAG`, it adds the default
 from `infra/.env.example`; an existing operator-selected value is preserved.
 It preserves other settings and leaves branches, checkouts, and parent submodule
 pointers unchanged. Prereleases are excluded. Tag discovery does not verify

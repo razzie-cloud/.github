@@ -125,9 +125,14 @@
 ### infra
 
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Valkey,
-  the broker, access-gateway, files, Dozzle, Caddy Docker Proxy, and a whoami demo.
+  the broker, access-gateway, files, public RazChess/UUID/GeoIP/0x40hues apps, Dozzle,
+  Caddy Docker Proxy, and a whoami demo.
   The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
   deployment labels and publishes ports 80/443.
+  RazChess and GeoIP use `--redis-from` with separate Valkey instances. Their
+  startup wrappers wait for broker readiness; RazChess stays at one replica.
+  Its default session loader uses `SCAN`, compatible with broker ACLs. See
+  `infra/docs/operations.md`.
 - `deploy.sh` creates missing external Docker secrets and deploys the stack.
   Its defaults are Docker context `razcloud` and stack name `razzie-cloud`,
   overridable with `DOCKER_CONTEXT` and `STACK_NAME`. It resolves the stack
@@ -256,11 +261,13 @@ on them, and update this guide when they change.
   image publication and stack tags when releasing cross-component changes.
 - The existing local changes in infra predate parent setup. Keep unrelated fixes
   separate from those changes and do not commit them incidentally.
-- The stack requires image tags from ignored `infra/.env`; `.env.example` in
-  infra lists the variables. Do not record current service versions in stack
-  files, README.md, or AGENTS.md. Root `make latest-tags` selects the highest
-  stable numeric release tags from the service remotes without changing source
-  checkouts or parent pins. Root `make config` and `make deploy` delegate to
+- The stack requires platform and third-party image tags from ignored
+  `infra/.env`; `.env.example` in infra lists the variables. RazChess, UUID,
+  GeoIP and 0x40hues use fixed stack defaults with optional overrides and are excluded from
+  tag discovery. Keep other current service versions out of stack files and all
+  current versions out of README.md and AGENTS.md. Root `make latest-tags` selects
+  the highest stable numeric release tags from the three platform service remotes
+  without changing source checkouts or parent pins. Root `make config` and `make deploy` delegate to
   infra's Makefile, which loads and exports the selected environment file.
   `make deploy-latest` combines tag selection and deployment; do not run it as
   validation. Releases need no parent or infra version-only commits. See
