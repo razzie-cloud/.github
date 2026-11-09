@@ -23,6 +23,11 @@ Compose builds the gateway from the checked-out source and tags it as
 `ghcr.io/razzie-cloud/access-gateway:dev`. Override `ACCESS_GATEWAY_IMAGE_TAG`
 in `.env` to change the local build's tag.
 
+The public homepage is at <http://localhost:8080>. Compose builds its static
+Caddy image from `infra/landing/`, with Files and sign-in links pointing to the
+local hostnames and `LOCAL_PORT`. After changing the page, logo, or shared port,
+run `docker compose up --build -d landing caddy` to rebuild it.
+
 Find the `bootstrap.token_created` event and its `bootstrap_token` field in the
 gateway logs. Open <http://auth.localhost:8080>, create the first administrator
 using that token and a passkey, then sign in. The token
@@ -105,7 +110,9 @@ these credentials with the local demo.
 
 The root [docker-compose.yml](../docker-compose.yml) builds all three Go services from
 their submodules using host build networking, matching the gateway's standalone
-Compose setup. The broker provisions the gateway's and files' PostgreSQL databases
+Compose setup, plus the static landing-page image from `infra/landing/`.
+The homepage joins only the web network, is public, and has no database dependency.
+The broker provisions the gateway's and files' PostgreSQL databases
 and the gateway's numbered Valkey database. The gateway discovers
 its credentials through `REDIS_URI_FROM` using `/v1/instances/valkey/access_gateway/uri`.
 Valkey requires the local `VALKEY_PASSWORD`; `VALKEY_IMAGE_TAG` selects a 9.1.0+

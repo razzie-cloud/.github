@@ -2,7 +2,7 @@
 
 ## Repository boundaries and Git workflow
 
-- This is the razcloud parent repository. `access-gateway/`, `database-broker/`, `files/`,
+- This is the Razzie Cloud parent repository. `access-gateway/`, `database-broker/`, `files/`,
   and `infra/` are Git submodules with separate histories and GitHub remotes
   under `razzie-cloud`. Use standard `git submodule` commands.
 - Keep root documentation and coordination files in the parent. Change service
@@ -126,7 +126,9 @@
 
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Valkey,
   the broker, access-gateway, files, public RazChess/UUID/GeoIP/0x40hues apps, Dozzle,
-  Caddy Docker Proxy, and a whoami demo.
+  Caddy Docker Proxy, a public landing page at `razzie.cloud`, and a whoami demo.
+  `infra/landing/` packages the static page in `ghcr.io/razzie-cloud/landing`;
+  build/publish it before selecting `LANDING_IMAGE_TAG` in infra's environment.
   The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
   deployment labels and publishes ports 80/443 in host mode to preserve visitor
   IPs for GeoIP. Public DNS targets the manager running Caddy.
@@ -173,10 +175,12 @@
   demo with PostgreSQL, Valkey, Caddy, and traefik/whoami. Copy `.env.example`
   to `.env` and set separate local `POSTGRES_PASSWORD` and `VALKEY_PASSWORD`
   values before starting. Caddy publishes a single loopback HTTP port, `8080`,
-  and routes by hostname: gateway
+  and routes by hostname: public homepage `http://localhost:8080`, gateway
   `http://auth.localhost:8080`, whoami `http://whoami.localhost:8080`, Files
   `http://files.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
-  `LOCAL_PORT` overrides the shared port. The broker provisions the gateway's
+  `LOCAL_PORT` overrides the shared port. Compose builds `infra/landing/` with
+  local service links; rebuild the landing image after changing the port or assets.
+  The broker provisions the gateway's
   and files' PostgreSQL databases and the gateway's numbered Valkey database;
   the gateway uses `REDIS_URI_FROM` with the `valkey` adapter path for credentials.
   Valkey is private to the backend network and uses `VALKEY_IMAGE_TAG` (9.1.0+).

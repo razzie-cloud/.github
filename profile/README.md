@@ -1,4 +1,6 @@
-# razzie-cloud
+# Razzie Cloud
+
+<img src="../docs/brand/razzie-cloud-logo.png" width="96" alt="Razzie Cloud logo">
 
 A self-hosted platform built around two shared services: **database-broker** for
 database provisioning and **access-gateway** for passkey sign-in. Applications

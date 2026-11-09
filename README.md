@@ -1,4 +1,6 @@
-# razzie-cloud
+# Razzie Cloud
+
+<img src="docs/brand/razzie-cloud-logo.png" width="96" alt="Razzie Cloud logo">
 
 A self-hosted platform with shared passkey sign-in, database provisioning, and an
 S3 file manager. This parent repository brings the services together for local
@@ -41,6 +43,7 @@ then sign in. The token is logged only once when generated.
 
 | Local URL | Use |
 | --- | --- |
+| <http://localhost:8080> | Homepage: project links, Files, and sign-in |
 | <http://auth.localhost:8080> | Gateway: sign in, add users, and enroll devices |
 | <http://whoami.localhost:8080> | Whoami: see the identity passed to a protected app |
 | <http://files.localhost:8080> | Files: connect your S3 storage and add a directory |
@@ -62,3 +65,6 @@ For a server installation, start with the [infra guide](infra/README.md).
 For local configuration, service checks, and component updates, see
 [development and maintenance](docs/development.md). Architecture and contributor
 rules live in [AGENTS.md](AGENTS.md).
+
+See the [brand assets](docs/brand/README.md) and
+[frontend design mockups](docs/frontend-mockups.md) for the visual identity.
