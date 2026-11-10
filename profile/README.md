@@ -14,9 +14,9 @@ flowchart TD
     Gateway -.->|Request connection URIs| Broker[database-broker]
     Files -.->|Request connection URI| Broker
     Broker -->|Provision| PostgreSQL
-    Broker -->|Provision namespaces| Dragonfly[Dragonfly · Redis-compatible]
+    Broker -->|Provision databases| Valkey[Valkey · Redis-compatible]
     Gateway -->|Accounts| PostgreSQL
-    Gateway -->|Sessions| Dragonfly
+    Gateway -->|Sessions| Valkey
     Files -->|Configuration and credentials| PostgreSQL
     Files -->|File contents| S3[S3-compatible storage]
 ```
@@ -27,12 +27,12 @@ to their databases. It stays on the private network.
 ## The cornerstone duo
 
 - **[database-broker](https://github.com/razzie-cloud/database-broker)** creates
-  per-service PostgreSQL databases and Dragonfly/Redis namespaces on demand.
+  per-service PostgreSQL and Valkey databases on demand.
   Services fetch a connection URI from its internal HTTP API, keeping backend
   provisioning in one place.
 - **[access-gateway](https://github.com/razzie-cloud/access-gateway)** provides
   passkey accounts, device enrollment links, user management, and shared sign-in
-  through Caddy forward authentication. PostgreSQL holds accounts; Redis holds
+  through Caddy forward authentication. PostgreSQL holds accounts; Valkey holds
   sessions. Protected applications receive verified user identity headers.
 
 **[Files](https://github.com/razzie-cloud/files)** shows the pattern: it gets its
