@@ -28,6 +28,13 @@ Open the screenshots directly:
 - [Gateway: passkey sign-in](../access-gateway/docs/mockups/login-desktop.png)
 - [Notes: note library](../notes/docs/mockups/index-desktop.png)
 - [Notes: Markdown editor](../notes/docs/mockups/edit-desktop.png)
+- [Files: storage connections](../files/docs/mockups/connections-desktop.png)
+- [Files: edit connection dialog](../files/docs/mockups/connections-edit-desktop.png)
+- [Notes: storage settings](../notes/docs/mockups/storage-desktop.png)
+- [Notes: edit connection dialog](../notes/docs/mockups/storage-edit-desktop.png)
+- [Notes: notebooks](../notes/docs/mockups/notebooks-desktop.png)
+- [Notes: first notebook](../notes/docs/mockups/notebooks-empty-desktop.png)
+- [Notes: edit notebook dialog](../notes/docs/mockups/notebooks-edit-desktop.png)
 
 Dark versions are also available:
 
@@ -54,16 +61,31 @@ Then visit:
 - [Gateway](http://127.0.0.1:8765/access-gateway/docs/mockups/index.html)
 - [Gateway sign-in](http://127.0.0.1:8765/access-gateway/docs/mockups/login.html)
 - [Notes](http://127.0.0.1:8765/notes/docs/mockups/index.html)
+- [Files storage settings](http://127.0.0.1:8765/files/docs/mockups/connections.html)
+- [Notes storage settings](http://127.0.0.1:8765/notes/docs/mockups/storage.html)
+- [Notes notebooks](http://127.0.0.1:8765/notes/docs/mockups/notebooks.html)
+- [Notes first notebook](http://127.0.0.1:8765/notes/docs/mockups/notebooks-empty.html)
 
 The preview banner links between services. Use HTTP rather than opening HTML as
 `file://` so HTMX can fetch the sample fragments. Stop the server with Ctrl+C.
+
+The storage previews have **No connections** links for reviewing inline first-use
+forms, plus same-screen theme switches. Existing connections show Add/Edit dialogs
+with prefilled public settings and blank credentials. Cancel and Escape return
+focus; sample saves close the dialog and show feedback. Error fixtures retain
+the draft. Entered values are never sent or persisted. Notes gives notebook
+mappings their own **Notebooks** sidebar page: existing cards with Add/Edit dialogs,
+or an inline first-notebook form. **Connections** stays on its separate page.
+The mockup does not change production settings.
 
 ## Files
 
 The directory overview gives each bucket/prefix mapping a compact card. The file
 browser uses a stable directory sidebar, a breadcrumb above the title, a readable
-table, and a contextual detail/upload column. Sharing and storage settings have
-focused forms with guidance beside them. The recipient view has a simpler shell
+table, and a contextual detail/upload column. Sharing has a focused form with
+guidance beside it. Storage settings show connection cards and an Add connection
+button; Add/Edit fetch forms into a native HTML5 dialog. The first connection
+form stays inline when no connections exist. The recipient view has a simpler shell
 and only read-only actions.
 
 The original frontend used `aria-label="Breadcrumb"`, while Pico's vendored CSS
@@ -85,12 +107,21 @@ See the [Gateway screen guide](../access-gateway/docs/mockups/README.md).
 ## Notes
 
 Notes has its own submodule and self-contained design mockups.
-Eight screens cover the library, reading, editing, creating a note, tag collections,
-tag filtering, first use, and a proposed storage setup. Both themes follow the
+Screens cover the library, reading, editing, creating a note, tag collections,
+tag filtering, first use, and separate connection/notebook settings with
+existing/empty states.
+Both themes follow the
 existing service shell, controls, colors, logo, and spacing. The editor places
 Markdown beside a fixed rendered example and keeps attachments below the draft.
 Local downloads, sample search, attachment removal/upload fixtures, and save/failure
 states make the concept reviewable without backend access. Changes are not saved.
+
+The notebook concept mirrors connection setup: cards and an Add button when
+notebooks exist, an inline form for the first notebook, and native Add/Edit dialogs.
+Cards show storage location, effective access and encryption. Edit changes only
+name and read-only policy; location and encryption are fixed. Add includes the
+current rclone crypt controls. Errors retain drafts; successful simulations return
+fixed sample cards. The empty notebook fixture has existing connections.
 
 See the [Notes screen guide](../notes/docs/mockups/README.md) and
 [implemented architecture](../notes/docs/architecture.md). The live Go service
@@ -103,8 +134,9 @@ it through the gateway; the static mockups remain broader design references.
 
 These are design artifacts with sample data. Forms fetch static HTML fragments
 through the existing vendored HTMX; they never call service APIs. No passkey,
-share, upload, account, or storage connection is created. No custom JavaScript,
-external assets, frontend build step, or dependency installation is needed.
+share, upload, account, or storage connection is created. A small external script
+opens/closes native storage dialogs and restores focus. No external assets,
+frontend build step, or dependency installation is needed.
 The CSP disables inline scripts/styles and HTMX evaluation/history snapshots.
 
 The concepts show layout and interaction patterns rather than exhaustive forms:
@@ -115,6 +147,30 @@ Directory descriptions are illustrative copy, not an existing persisted field.
 Counters are sample record counts, not storage usage or quota estimates.
 
 ## Verification
+
+The separate Notes notebook-page concept passed 88 Chromium layout checks:
+22 full pages across both themes and widths of 320, 390, 768 and 1440 pixels.
+Notebook empty/populated interactions covered inline first setup, native Add/Edit
+dialogs, keyboard focus/return, Cancel/Close/Escape, immutable edit location,
+read-only connection policy, optional crypt controls, retained error drafts,
+and static saves. Theme/sidebar navigation and connection dialogs also passed.
+No entered settings/passwords appeared in requests, and no browser errors or
+failed requests were observed. Local links, unique IDs, theme fixture parity
+and Git whitespace checks passed. Desktop/mobile screenshots were refreshed and
+inspected visually. This revision changes mockups and documentation only; it
+does not run Go checks, connect to storage or change the live application.
+
+The storage-dialog concept was checked separately in Chromium: Files and Notes,
+both themes, existing/empty connection states, and widths of 320, 390, 768 and
+1440 pixels (32 layout cases). Add/Edit, focus containment/return, Escape,
+Close/Cancel, public-settings prefill, blank credentials, validation, retained
+error drafts, simulated saves and theme round trips passed. Bucket/removal and
+notebook fixtures also passed. Requests contained no entered credential values;
+no console/page errors or failed responses were observed. Local references,
+unique IDs, synchronized dialog assets and Git whitespace checks passed.
+List, empty and desktop/mobile edit screenshots were saved for both services
+and themes and inspected visually. No production code/assets changed, so Go
+checks and live backend acceptance were not run for this concept.
 
 The review used headless Chromium via Playwright against a loopback-only static
 server. All 24 full pages (12 per theme) were checked at 1440×1050 and 390×844 for successful loads,
@@ -136,6 +192,40 @@ Hardware passkey/Cast and production backends are not part of the mockup checks.
 Nothing was pushed, published, or deployed during these checks.
 
 ## Production frontend implementation
+
+Notes now implements the reviewed separate Notebooks page: existing notebook
+cards with Add/Edit dialogs, an inline first-notebook form, and connection setup
+guidance when no provider exists. Cards include effective access, encryption and
+crypt recovery downloads. Real saves refresh the notebook list; safe errors
+retain browser drafts. Full-page fallbacks, legacy edit links, immutable location
+and crypt settings, revisions and owner scoping are retained. The mockups remain
+independent sample-data artifacts.
+
+Files and Notes now use the reviewed storage connection cards and native HTML5
+Add/Edit dialogs. HTMX loads the shared production form and refreshes settings
+after saves. Empty storage keeps its first form inline; direct Add/Edit links
+retain full-page fallback forms. Error fragments preserve browser drafts without
+echoing submitted or saved credentials. Notes keeps its notebook, recovery,
+conditional-write and encryption controls, including initialization after swaps.
+Attached notebooks lock connection location controls while submitting the saved
+values. Both services retain owner scoping, revision checks and existing POST
+routes. Local chevrons and HTMX settling without style attributes preserve CSP.
+
+Implementation verification ran `gofmt`, `go build ./...`, `go vet ./...`,
+`go test ./... -skip '^TestConnectionBrowserHarness$'` and
+`go test -race ./... -skip '^TestConnectionBrowserHarness$'` in both modules.
+Only the temporary live-browser harness was excluded from the suites, then removed.
+Tests used a newly initialized loopback PostgreSQL database with isolated schemas
+and in-memory S3 fixtures. Regression coverage includes inline/list/fallback and
+fragment states, escaped metadata, blank credential rendering, owner isolation,
+credential retention, revision conflicts, location locks and error retargeting.
+Chromium exercised the real handlers for both services in light/dark at 320, 390,
+768 and 1440 pixels, covering 32 empty/populated layout cases with real connection
+creates, updates and removals. Focus/cleanup, Add/Edit, validation/retry, retained
+network-failure drafts, full-page fallback and Notes encryption initialization
+after swaps passed. The final pass had no page or CSP errors. Production
+screenshots were inspected visually; mockup screenshots remain separate examples.
+No production storage, gateway authentication, Cast hardware or deployment was used.
 
 The gateway now uses account-state navigation, a split activity/enrollment layout,
 device management disclosures, and distinct login/bootstrap/enrollment panels.
