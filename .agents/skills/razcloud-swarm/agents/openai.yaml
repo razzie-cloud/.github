@@ -1,0 +1,3 @@
+interface:
+  display_name: "Razzie Cloud Swarm"
+  short_description: "Maintain Swarm stacks and release helper scripts"

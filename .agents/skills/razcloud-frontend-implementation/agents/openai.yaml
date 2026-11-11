@@ -1,0 +1,3 @@
+interface:
+  display_name: "Razzie Cloud Frontends"
+  short_description: "Implement embedded Razzie Cloud app frontends"

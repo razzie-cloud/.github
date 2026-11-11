@@ -1,5 +1,19 @@
 # Development guide
 
+## Repository skills
+
+Reusable project workflows live in the parent repository's `.agents/skills/`.
+Read the relevant skill when the task matches; component `AGENTS.md` and current
+source remain authoritative for service-specific details.
+
+| Skill | Use for |
+| --- | --- |
+| [razcloud-frontend-mockups](.agents/skills/razcloud-frontend-mockups/SKILL.md) | Interactive sample-data designs, light/dark previews and screenshots |
+| [razcloud-frontend-implementation](.agents/skills/razcloud-frontend-implementation/SKILL.md) | Embedded production UI changes and translating mockups into live templates |
+| [razcloud-new-app](.agents/skills/razcloud-new-app/SKILL.md) | A new independent app and its platform integration |
+| [razcloud-compose](.agents/skills/razcloud-compose/SKILL.md) | Parent local Compose stack, proxy routes and fixtures |
+| [razcloud-swarm](.agents/skills/razcloud-swarm/SKILL.md) | Swarm configuration, image selection and deployment helper maintenance |
+
 ## Repository boundaries and Git workflow
 
 - This is the Razzie Cloud parent repository. `access-gateway/`, `database-broker/`, `files/`,

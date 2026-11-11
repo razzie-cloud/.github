@@ -68,6 +68,9 @@ For local configuration, service checks, and component updates, see
 [development and maintenance](docs/development.md). Architecture and contributor
 rules live in [AGENTS.md](AGENTS.md).
 
+Reusable workflows for frontend mockups, production UI, new apps, local Compose
+and Swarm maintenance are listed in [repository skills](AGENTS.md#repository-skills).
+
 See the [brand assets](docs/brand/README.md) and
 [frontend design mockups](docs/frontend-mockups.md) for the visual identity.
 
