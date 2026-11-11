@@ -3,8 +3,8 @@ set -euo pipefail
 
 project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 env_file="${1:-$project_root/infra/.env}"
-services=(database-broker access-gateway files)
-keys=(DATABASE_BROKER_IMAGE_TAG ACCESS_GATEWAY_IMAGE_TAG FILES_IMAGE_TAG)
+services=(database-broker access-gateway files notes)
+keys=(DATABASE_BROKER_IMAGE_TAG ACCESS_GATEWAY_IMAGE_TAG FILES_IMAGE_TAG NOTES_IMAGE_TAG)
 tags=()
 
 latest_tag() {
@@ -51,13 +51,14 @@ trap '[[ -z "$temporary" ]] || rm -f -- "$temporary"' EXIT
 
 # Replace only service tag assignments, preserving operator settings and comments.
 awk -v broker="${tags[0]}" -v gateway="${tags[1]}" -v files="${tags[2]}" \
-  -v dozzle="$dozzle_tag" '
+  -v notes="${tags[3]}" -v dozzle="$dozzle_tag" '
   BEGIN {
-    split("DATABASE_BROKER_IMAGE_TAG ACCESS_GATEWAY_IMAGE_TAG FILES_IMAGE_TAG DOZZLE_IMAGE_TAG", keys, " ")
+    split("DATABASE_BROKER_IMAGE_TAG ACCESS_GATEWAY_IMAGE_TAG FILES_IMAGE_TAG NOTES_IMAGE_TAG DOZZLE_IMAGE_TAG", keys, " ")
     tags[keys[1]] = broker
     tags[keys[2]] = gateway
     tags[keys[3]] = files
-    tags[keys[4]] = dozzle
+    tags[keys[4]] = notes
+    tags[keys[5]] = dozzle
   }
   match($0, /^[[:space:]]*(export[[:space:]]+)?[A-Z_]+[[:space:]]*=/) {
     key = substr($0, 1, RLENGTH)
@@ -73,7 +74,7 @@ awk -v broker="${tags[0]}" -v gateway="${tags[1]}" -v files="${tags[2]}" \
   }
   { print }
   END {
-    for (i = 1; i <= 4; i++)
+    for (i = 1; i <= 5; i++)
       if (!seen[keys[i]]) print keys[i] "=" tags[keys[i]]
   }
 ' "$source_file" > "$temporary"

@@ -9,6 +9,7 @@ services:
       args:
         FILES_ORIGIN: http://files.localhost:${LOCAL_PORT:-8080}
         AUTH_ORIGIN: http://auth.localhost:${LOCAL_PORT:-8080}
+        NOTES_ORIGIN: http://notes.localhost:${LOCAL_PORT:-8080}
     networks:
       - web
 
@@ -88,7 +89,7 @@ services:
       RP_NAME: Razzie Cloud local
       # Gateway ports are private; Caddy reaches it over Docker networks.
       TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
-      FORWARD_AUTH_ORIGINS: http://whoami.localhost:${LOCAL_PORT:-8080},http://files.localhost:${LOCAL_PORT:-8080},http://logs.localhost:${LOCAL_PORT:-8080}
+      FORWARD_AUTH_ORIGINS: http://whoami.localhost:${LOCAL_PORT:-8080},http://files.localhost:${LOCAL_PORT:-8080},http://logs.localhost:${LOCAL_PORT:-8080},http://notes.localhost:${LOCAL_PORT:-8080}
     networks:
       - backend
       - web
@@ -134,6 +135,24 @@ services:
       database-broker:
         condition: service_healthy
 
+  notes:
+    build:
+      context: ./notes
+      network: host
+    environment:
+      POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/notes/uri
+      ORIGIN: http://notes.localhost:${LOCAL_PORT:-8080}
+      # Users configure their own connections in Notes. This operator exception
+      # permits only the optional local S3 fixture, as in Files.
+      S3_ALLOWED_PRIVATE_ENDPOINTS: s3-demo:9000
+      S3_ALLOW_HTTP: "true"
+    networks:
+      - backend
+      - web
+    depends_on:
+      database-broker:
+        condition: service_healthy
+
   s3-demo:
     profiles: [storage-demo]
     build:
@@ -165,6 +184,8 @@ services:
       whoami:
         condition: service_started
       files:
+        condition: service_started
+      notes:
         condition: service_started
       dozzle:
         condition: service_started

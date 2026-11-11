@@ -11,6 +11,7 @@ use and tracks their independent repositories as Git submodules.
 | [access-gateway](access-gateway/README.md) | Passkey accounts, device enrollment, user management, and shared sign-in for protected apps |
 | [database-broker](database-broker/README.md) | Creates per-service PostgreSQL and Valkey databases and returns their connection URIs |
 | [files](files/README.md) | Browse, upload, and share S3 files, with optional rclone encryption |
+| [notes](notes/README.md) | Markdown notes with user-managed S3 connections, optional rclone encryption, and search |
 | [infra](infra/README.md) | Deploys the platform with Docker Swarm and Caddy; includes optional NixOS host configuration |
 
 Caddy checks app access with the gateway. Services ask the broker for a database
@@ -68,3 +69,9 @@ rules live in [AGENTS.md](AGENTS.md).
 
 See the [brand assets](docs/brand/README.md) and
 [frontend design mockups](docs/frontend-mockups.md) for the visual identity.
+
+Notes is available at `http://notes.localhost:8080` in local Compose and
+`https://notes.<DOMAIN>` in Swarm. Start the local `storage-demo` profile with
+`S3_DEV_PASSWORD` set, then add connections and optionally encrypted notebooks in
+Notes’ Storage page, just as in Files. See the
+[Notes service guide](notes/README.md) for conditional saves, search, and recovery.

@@ -3,7 +3,7 @@
 ## Repository boundaries and Git workflow
 
 - This is the Razzie Cloud parent repository. `access-gateway/`, `database-broker/`, `files/`,
-  and `infra/` are Git submodules with separate histories and GitHub remotes
+  `notes/`, and `infra/` are Git submodules with separate histories and GitHub remotes
   under `razzie-cloud`. Use standard `git submodule` commands.
 - Keep root documentation and coordination files in the parent. Change service
   code and deployment files in their owning submodule. Do not copy child source
@@ -122,6 +122,33 @@
 - PostgreSQL integration tests require a disposable loopback `TEST_DATABASE_URL`;
   other storage tests start an in-memory S3 HTTP server automatically.
 
+### notes
+
+- Go module `github.com/razzie-cloud/notes`; entry `cmd/notes/main.go`.
+  Read `notes/AGENTS.md`, its plan correction and architecture document.
+- Storage setup follows Files: owner-managed S3 connections and bucket/prefix
+  notebooks with optional rclone crypt. Notes owns its settings, credentials and
+  recovery records; no Files database tables or saved connections are shared.
+- S3 is authoritative for Markdown/front matter and attachments. PostgreSQL
+  storage settings/secrets are durable and need backups; only index/scan/River
+  tables are disposable. No deployment-wide S3 bucket, credentials, master key,
+  provider Docker secrets or Notes-specific volume is required.
+- rclone crypt handles compatible name/content encryption; the AWS SDK retains
+  conditional writes and paginated listing. Preserve connection-time egress
+  checks, owner/notebook query scoping and current read-only policy checks.
+  Storage checks share the caller's object/page transaction to avoid nested
+  pool acquisition. Removing mappings retains S3 objects and crypt recovery.
+- River queues maintenance and indexing coordinate per-notebook scan/index work
+  across replicas. Durable cursors, advisory locks and current S3 revalidation
+  protect retries/duplicates. Only complete listings permit sweep; authoritative
+  absence checks remove derived rows. Search uses PostgreSQL simple vectors.
+- Embedded PicoCSS/HTMX includes storage setup, notebook selection and explicit
+  saves with preserved conflict drafts. Compose/Swarm keep every path behind SSO;
+  /v1/admin/* also requires the gateway admin policy and trusted marker.
+- Run build/vet/tests/race inside notes/. PostgreSQL integration uses disposable
+  loopback TEST_DATABASE_URL and random schemas; S3 fixtures start automatically.
+  Tests include independent rclone filesystem compatibility and encrypted rebuild.
+
 ### infra
 
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Valkey,
@@ -150,7 +177,7 @@
 
 ## Local development and verification
 
-- All three Go modules declare Go 1.27. Run module commands inside the relevant
+- All four Go modules declare Go 1.27. Run module commands inside the relevant
   submodule; the parent has no `go.mod` or `go.work`.
 - Format changed Go files with `gofmt`. For service changes run `go build ./...`
   and `go vet ./...` in the affected module, plus relevant tests.
@@ -173,13 +200,13 @@
   clean up all test data/users; its container fallback uses Valkey 9.1.0.
 - Each service has its own Dockerfile and Compose file. The gateway/broker stacks both
   publish ports 5432 and 8080; run them separately or adjust host port mappings.
-- The parent `docker-compose.yml` builds all three services and runs a local auth
+- The parent `docker-compose.yml` builds all four services and runs a local auth
   demo with PostgreSQL, Valkey, Caddy, and traefik/whoami. Copy `.env.example`
   to `.env` and set separate local `POSTGRES_PASSWORD` and `VALKEY_PASSWORD`
   values before starting. Caddy publishes a single loopback HTTP port, `8080`,
   and routes by hostname: public homepage `http://localhost:8080`, gateway
   `http://auth.localhost:8080`, whoami `http://whoami.localhost:8080`, Files
-  `http://files.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
+  `http://files.localhost:8080`, Notes `http://notes.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
   `LOCAL_PORT` overrides the shared port. Compose builds `infra/landing/` with
   local service links; rebuild the landing image after changing the port or assets.
   The broker provisions the gateway's
@@ -273,7 +300,7 @@ on them, and update this guide when they change.
   GeoIP and 0x40hues use fixed stack defaults with optional overrides and are excluded from
   tag discovery. Keep other current service versions out of stack files and all
   current versions out of README.md and AGENTS.md. Root `make latest-tags` selects
-  the highest stable numeric release tags from the three platform service remotes
+  the highest stable numeric release tags from the four platform service remotes
   without changing source checkouts or parent pins. Root `make config` and `make deploy` delegate to
   infra's Makefile, which loads and exports the selected environment file.
   `make deploy-latest` combines tag selection and deployment; do not run it as

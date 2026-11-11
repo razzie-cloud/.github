@@ -9,7 +9,7 @@ homepage design. Both stacks now include a static landing service: locally at
 
 Local, interactive concepts for the existing embedded PicoCSS and HTMX frontends.
 Each service owns its mockups under `docs/mockups/`. The reviewed layout and
-automatic light/dark palettes are now implemented in each service's embedded
+automatic light/dark palettes are now implemented in Files' and the gateway's embedded
 templates and stylesheet. The mockups remain separate sample-data design artifacts.
 Authentication and storage behavior are unchanged.
 
@@ -26,6 +26,8 @@ Open the screenshots directly:
 - [Files: nested file browser](../files/docs/mockups/browse-desktop.png)
 - [Gateway: account management](../access-gateway/docs/mockups/index-desktop.png)
 - [Gateway: passkey sign-in](../access-gateway/docs/mockups/login-desktop.png)
+- [Notes: note library](../notes/docs/mockups/index-desktop.png)
+- [Notes: Markdown editor](../notes/docs/mockups/edit-desktop.png)
 
 Dark versions are also available:
 
@@ -33,6 +35,8 @@ Dark versions are also available:
 - [Files: nested file browser](../files/docs/mockups/dark/browse-desktop.png)
 - [Gateway: account management](../access-gateway/docs/mockups/dark/index-desktop.png)
 - [Gateway: passkey sign-in](../access-gateway/docs/mockups/dark/login-desktop.png)
+- [Notes: note library](../notes/docs/mockups/dark/index-desktop.png)
+- [Notes: Markdown editor](../notes/docs/mockups/dark/edit-desktop.png)
 
 Every mockup screen has a corresponding dark desktop image; the service screen
 guides below link the complete sets. The preview bar switches between light and
@@ -49,6 +53,7 @@ Then visit:
 - [Files](http://127.0.0.1:8765/files/docs/mockups/index.html)
 - [Gateway](http://127.0.0.1:8765/access-gateway/docs/mockups/index.html)
 - [Gateway sign-in](http://127.0.0.1:8765/access-gateway/docs/mockups/login.html)
+- [Notes](http://127.0.0.1:8765/notes/docs/mockups/index.html)
 
 The preview banner links between services. Use HTTP rather than opening HTML as
 `file://` so HTMX can fetch the sample fragments. Stop the server with Ctrl+C.
@@ -76,6 +81,23 @@ without pushing activity far down the page. The sign-in and registration screens
 use a two-column panel with one clear primary action.
 
 See the [Gateway screen guide](../access-gateway/docs/mockups/README.md).
+
+## Notes
+
+Notes has its own submodule and self-contained design mockups.
+Eight screens cover the library, reading, editing, creating a note, tag collections,
+tag filtering, first use, and a proposed storage setup. Both themes follow the
+existing service shell, controls, colors, logo, and spacing. The editor places
+Markdown beside a fixed rendered example and keeps attachments below the draft.
+Local downloads, sample search, attachment removal/upload fixtures, and save/failure
+states make the concept reviewable without backend access. Changes are not saved.
+
+See the [Notes screen guide](../notes/docs/mockups/README.md) and
+[implemented architecture](../notes/docs/architecture.md). The live Go service
+uses a separate PicoCSS/HTMX interface with user-managed connections, optional
+rclone encryption, notebook selection, explicit conditional saves,
+S3 authority, PostgreSQL search and River reconciliation. Compose and Swarm route
+it through the gateway; the static mockups remain broader design references.
 
 ## Implementation boundaries
 

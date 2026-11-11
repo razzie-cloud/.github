@@ -94,6 +94,36 @@ loopback mapping:
 curl --resolve files.localhost:8080:127.0.0.1 http://files.localhost:8080/
 ```
 
+### Slow pages and intermittent proxy timeouts
+
+When even tiny static assets wait seconds before their first byte, compare HAR
+request timings with Caddy's upstream errors. If the backend responds immediately
+over its own loopback interface but Caddy logs `dial tcp ...:8080: i/o timeout`,
+check the Docker bridge for duplicate MAC addresses:
+
+```sh
+docker --context default network inspect razcloud_web --format '{{range .Containers}}{{.Name}} {{.IPv4Address}} {{.MacAddress}}{{println}}{{end}}'
+docker --context default network inspect razcloud_backend --format '{{range .Containers}}{{.Name}} {{.IPv4Address}} {{.MacAddress}}{{println}}{{end}}'
+```
+
+Each container interface on the same network needs a unique MAC. A duplicate
+between the gateway and Notes can make authentication traffic and Notes traffic
+switch the bridge's forwarding entry between their interfaces. TCP retransmissions
+then produce long waits even though DNS, SQL and page rendering are fast.
+
+Docker Engine 25.0.0 has a documented duplicate-MAC bug. Upgrade the engine to a
+patched release, then **recreate** affected containers; restarting them alone can
+retain the bad addresses. See the [Docker release note](https://docs.docker.com/engine/release-notes/25.0/#2503).
+After the host upgrade, from the parent checkout:
+
+```sh
+docker --context default compose up -d --force-recreate --no-build --pull never
+```
+
+This uses existing images and preserves named database volumes. Recheck both
+networks for duplicates and repeat the browser load. A host Docker upgrade is an
+operator action, separate from service-source changes or ordinary validation.
+
 ### Disposable S3 demo
 
 For an optional disposable S3 demo, set a fresh `S3_DEV_PASSWORD` in `.env` and
@@ -106,9 +136,30 @@ Demo objects disappear when the fixture restarts. The private HTTP exception is
 limited to `s3-demo:9000`; normal vendor connections use public HTTPS. Only use
 these credentials with the local demo.
 
+### Notes
+
+Open `http://notes.localhost:8080` after signing in. Notes starts with a storage
+setup screen. Add an S3 connection under Storage (provider, endpoint, region,
+path-style option, credentials and access policy), then attach a notebook to a
+bucket/prefix. Optional encryption uses rclone crypt passwords and naming options,
+including verification for existing encrypted data and downloadable recovery.
+
+With `storage-demo` enabled, use endpoint `http://s3-demo:9000`, region `us-east-1`,
+path-style addressing, access key `files-dev`, and `S3_DEV_PASSWORD`. Choose bucket
+`files-demo` and a dedicated prefix, such as `my-notes`. This bucket is in-memory.
+Durable provider credentials are entered in the same UI; no NOTES_S3_* credential
+variables are needed. Notes owns its PostgreSQL settings and secrets rather than
+sharing Files records. Back up these durable settings and crypt recovery passwords;
+its content index and River scan progress can be rebuilt from S3.
+
+Saves use underlying S3 ETags, including encrypted notes, and retain conflicting
+drafts. Admin rebuild/status paths use /forward_auth/admin; normal storage and
+content management use /forward_auth and owner-scoped lookups. See
+[Notes configuration and recovery](../notes/README.md).
+
 ### Local stack internals and cleanup
 
-The root [docker-compose.yml](../docker-compose.yml) builds all three Go services from
+The root [docker-compose.yml](../docker-compose.yml) builds all four Go services from
 their submodules using host build networking, matching the gateway's standalone
 Compose setup, plus the static landing-page image from `infra/landing/`.
 The homepage joins only the web network, is public, and has no database dependency.
@@ -149,13 +200,14 @@ docker compose config --quiet
 
 ### Run service checks
 
-All three services declare Go 1.27. Run Go commands from the individual service
+All four services declare Go 1.27. Run Go commands from the individual service
 directory; this parent has no Go module or workspace.
 
 ```sh
 (cd access-gateway && go build ./... && go test ./...)
 (cd database-broker && go build ./... && go test ./internal/config ./internal/broker ./internal/router ./internal/util)
 (cd files && go build ./... && go vet ./... && go test ./...)
+(cd notes && go build ./... && go vet ./... && go test ./...)
 ```
 
 The broker's full `go test ./...` suite also starts PostgreSQL, Dragonfly, and Valkey
@@ -196,7 +248,7 @@ make deploy
 
 `latest-tags` uses Bash, Git, awk, and GNU coreutils (`sort -V`). It selects the highest
 numeric stable release tag (`MAJOR.MINOR.PATCH`, with an optional `v` prefix)
-for the three platform services, fetches it into each service repository, and
+for the four platform services, fetches it into each service repository, and
 writes those image tags to ignored `infra/.env`. RazChess, UUID, GeoIP and 0x40hues use
 fixed stack defaults with optional overrides in `.env`; this command does not
 query their remotes or change their overrides.

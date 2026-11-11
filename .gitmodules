@@ -10,3 +10,6 @@
 [submodule "files"]
 	path = files
 	url = git@github.com:razzie-cloud/files.git
+[submodule "notes"]
+	path = notes
+	url = git@github.com:razzie-cloud/notes.git
