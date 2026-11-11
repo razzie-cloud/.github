@@ -59,10 +59,17 @@ services:
       retries: 30
 
   database-broker:
+    volumes:
+      - ./dev/broker-clients.yml:/run/configs/broker_policy.yml:ro
+      - ./.local/broker-auth/master:/run/secrets/broker_master:ro
     build:
       context: ./database-broker
       network: host
     environment:
+      AUTH_MODE: token
+      AUTH_POLICY_FILE: /run/configs/broker_policy.yml
+      AUTH_DEPLOYMENT_ID: razzie-cloud-development
+      AUTH_KEY_FILES: dev1=/run/secrets/broker_master
       POSTGRES_URI: postgres://broker:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}@postgres:5432/broker?sslmode=disable
       VALKEY_URI: redis://:${VALKEY_PASSWORD:?Set VALKEY_PASSWORD in .env (see .env.example)}@valkey:6379/0
     networks:
@@ -84,9 +91,12 @@ services:
     build:
       context: ./access-gateway
       network: host
+    volumes:
+      - ./.local/broker-auth/access_gateway.token:/run/secrets/broker_token:ro
     environment:
-      POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/access_gateway/uri
-      REDIS_URI_FROM: http://database-broker:8080/v1/instances/valkey/access_gateway/uri
+      BROKER_TOKEN_FILE: /run/secrets/broker_token
+      POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/access_gateway/uri?client=access_gateway
+      REDIS_URI_FROM: http://database-broker:8080/v1/instances/valkey/access_gateway/uri?client=access_gateway
       ORIGIN: http://auth.localhost:${LOCAL_PORT:-8080}
       LANDING_ORIGIN: http://localhost:${LOCAL_PORT:-8080}
       RP_ID: auth.localhost
@@ -124,9 +134,12 @@ services:
     build:
       context: ./files
       network: host
+    volumes:
+      - ./.local/broker-auth/files.token:/run/secrets/broker_token:ro
     environment:
+      BROKER_TOKEN_FILE: /run/secrets/broker_token
       ACCESS_GATEWAY_URL: http://access-gateway:8080
-      POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/files/uri
+      POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/files/uri?client=files
       ORIGIN: http://files.localhost:${LOCAL_PORT:-8080}
       LANDING_ORIGIN: http://localhost:${LOCAL_PORT:-8080}
       SHARE_ORIGIN: http://shared-files.localhost:${LOCAL_PORT:-8080}
@@ -147,9 +160,12 @@ services:
     build:
       context: ./notes
       network: host
+    volumes:
+      - ./.local/broker-auth/notes.token:/run/secrets/broker_token:ro
     environment:
+      BROKER_TOKEN_FILE: /run/secrets/broker_token
       ACCESS_GATEWAY_URL: http://access-gateway:8080
-      POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/notes/uri
+      POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/notes/uri?client=notes
       ORIGIN: http://notes.localhost:${LOCAL_PORT:-8080}
       LANDING_ORIGIN: http://localhost:${LOCAL_PORT:-8080}
       # Users configure their own connections in Notes. This operator exception

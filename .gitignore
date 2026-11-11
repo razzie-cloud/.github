@@ -9,3 +9,7 @@
 .vscode/
 *~
 .DS_Store
+
+# Generated, independent development broker credentials
+.local/
+__pycache__/

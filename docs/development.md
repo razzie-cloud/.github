@@ -15,6 +15,7 @@ from the project root against your local Docker daemon:
 cp .env.example .env
 # Set POSTGRES_PASSWORD and VALKEY_PASSWORD to separate random hex values.
 # Generate each with: openssl rand -hex 24
+make local-auth  # Requires Go 1.27 and Python 3; writes ignored development secrets
 docker compose up --build -d
 docker compose logs access-gateway
 ```
@@ -165,12 +166,16 @@ The root [docker-compose.yml](../docker-compose.yml) builds all four Go services
 their submodules using host build networking, matching the gateway's standalone
 Compose setup, plus the Go landing-page service image from `landing/`.
 The homepage joins only the web network, is public, and has no database dependency.
-The broker provisions the gateway's and files' PostgreSQL databases
+The broker provisions the gateway's, Files' and Notes' PostgreSQL databases
 and the gateway's numbered Valkey database. The gateway discovers
 its credentials through `REDIS_URI_FROM` using `/v1/instances/valkey/access_gateway/uri`.
 Valkey requires the local `VALKEY_PASSWORD`; `VALKEY_IMAGE_TAG` selects a 9.1.0+
 image with database ACL support. Database 0 holds broker metadata; the other 15
-databases are available to applications. The broker waits for both PostgreSQL
+databases are available to applications. Each first-party consumer mounts its own token file and includes its public client
+ID in discovery URLs. `dev/broker-clients.yml` declares exact grants; `make local-auth`
+uses the broker CLI to generate independent ignored development credentials. See
+[broker authentication](database-broker-auth.md) for both Compose modes and production
+TLS. The broker waits for both PostgreSQL
 and Valkey health checks before starting. Caddy
 checks every whoami/files request, including the SSO callback, with the gateway's
 `/forward_auth` endpoint, and Dozzle requests with `/forward_auth/admin`, before

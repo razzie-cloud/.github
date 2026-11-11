@@ -1,0 +1,21 @@
+# Explicit legacy mode: docker compose -f docker-compose.yml -f docker-compose.none.yml up
+services:
+  database-broker:
+    volumes: !reset []
+    environment:
+      AUTH_MODE: none
+      AUTH_POLICY_FILE: ""
+      AUTH_DEPLOYMENT_ID: ""
+      AUTH_KEY_FILES: ""
+  access-gateway:
+    volumes: !reset []
+    environment:
+      BROKER_TOKEN_FILE: ""
+  files:
+    volumes: !reset []
+    environment:
+      BROKER_TOKEN_FILE: ""
+  notes:
+    volumes: !reset []
+    environment:
+      BROKER_TOKEN_FILE: ""

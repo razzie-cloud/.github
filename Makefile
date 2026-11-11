@@ -14,3 +14,7 @@ config deploy:
 
 deploy-latest: latest-tags
 	$(MAKE) -C infra ENV_FILE="$(abspath $(INFRA_ENV_FILE))" deploy
+
+.PHONY: local-auth
+local-auth:
+	python3 database-broker/scripts/prepare-dev-auth.py --policy dev/broker-clients.yml --directory .local/broker-auth --deployment-id razzie-cloud-development

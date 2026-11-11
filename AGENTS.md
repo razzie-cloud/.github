@@ -362,3 +362,25 @@ existing proxy marker. Empty URL retains legacy proxy mode. Strip/copy the token
 with other identity headers, exclude public shares/health, and never echo tokens.
 Keep the independent Files/Notes verifier copies and tests synchronized. The
 full protocol is in access-gateway/docs/reference.md#signed-proxy-identity.
+
+## Scoped broker authentication
+
+Broker defaults to AUTH_MODE=token with strict YAML policy, deterministic scoped
+HMAC tokens and explicit key/generation overlap. See
+[broker authentication](docs/database-broker-auth.md) and broker docs/authentication.md.
+AUTH_MODE=none is an explicit legacy opt-out; it never loads policy/key files.
+All credential responses are no-store. Token-mode listing is denied.
+
+First-party consumers use BROKER_TOKEN_FILE / --broker-token-file and optional
+BROKER_CA_FILE / --broker-ca-file; public discovery URLs contain client IDs only.
+Keep independent discovery implementations/tests synchronized, including broker's
+legacy startup adapter. Never log URLs/raw HTTP errors or retry without auth.
+
+Local Compose uses independent development policy and ignored .local credentials;
+run make local-auth with Go/Python before starting. docker-compose.none.yml resets
+auth mounts explicitly and needs no token files. Production deploy.sh delegates to
+Python 3 for Swarm-only master generation, scoped client secrets, versioned policy,
+verified TLS, staged migration and bounded convergence. Read infra's broker auth
+guide and run its fake-Docker tests when changing lifecycle behavior. Do not deploy
+or publish as ordinary validation; referenced local commits still require publication
+before parent pointer updates or image references are published.

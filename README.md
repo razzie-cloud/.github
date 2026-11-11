@@ -21,7 +21,8 @@ connection, then connect directly to their data stores. File contents stay in S3
 ## Try it locally
 
 You need Git with GitHub SSH access and Docker with the Compose plugin, using a
-local Docker daemon. Go is only needed when running services outside containers.
+local Docker daemon. Go 1.27 and Python 3 prepare independent development broker
+credentials with `make local-auth`.
 
 ```sh
 git clone --recurse-submodules git@github.com:razzie-cloud/.github.git razcloud
@@ -29,12 +30,17 @@ cd razcloud
 cp .env.example .env
 # Set POSTGRES_PASSWORD and VALKEY_PASSWORD to separate random hex values.
 # Generate each with: openssl rand -hex 24
+make local-auth
 docker compose up --build -d
 docker compose logs access-gateway
 ```
 
 For an existing checkout, initialize missing components with
 `git submodule update --init --recursive` after checking for local changes.
+
+The broker defaults to scoped tokens. Development secrets are generated under
+ignored `.local/broker-auth`; production keys stay in Swarm. The explicit legacy
+Compose override needs no auth files; see [broker authentication](docs/database-broker-auth.md).
 
 The stack uses HTTP on `*.localhost`. Modern browsers treat these as local
 secure contexts, so passkeys work without certificates or trust installation.
