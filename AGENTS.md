@@ -310,8 +310,9 @@ on them, and update this guide when they change.
   app cookies and a single-use callback at the app's `/_auth/callback` path.
   `/forward_auth/admin` reuses this flow and requires the current PostgreSQL
   admin role on each app request; regular users receive 403 without a redirect.
-  Set `FORWARD_AUTH_ORIGINS` to exact allowed app origins; `ORIGIN` is the public
-  gateway URL. The stack includes access-gateway at `https://auth.razzie.cloud`
+  Set `FORWARD_AUTH_ORIGINS` to allowed app origins or leading `*.` subdomain
+  patterns (exact scheme/port, no apex match, gateway origin excluded); `ORIGIN`
+  is the public gateway URL. The stack includes access-gateway at `https://auth.razzie.cloud`
   and protects files and whoami with forward auth and verified identity headers.
   Dozzle uses `https://logs.razzie.cloud` and `/forward_auth/admin` on every path,
   including its callback. It runs globally in Swarm mode with a per-node settings
