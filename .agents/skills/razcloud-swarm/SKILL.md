@@ -40,7 +40,13 @@ considerations. `LANDING_ORIGIN` links apps home; sign-in targets `auth.<DOMAIN>
   Only Caddy publishes ingress; 80/443 use host mode to preserve visitor IPs. DNS
   must reach the manager running Caddy, not an assumed routing-mesh endpoint.
 - Caddy Docker Proxy uses **service deployment labels**. Keep ordered identity
-  stripping, gateway auth, verified-header copying and proxying. Callbacks stay
+  stripping, gateway auth, verified-header copying (including X-Auth-Request-Token)
+  and proxying. Files/Notes use ACCESS_GATEWAY_URL=http://access-gateway:8080
+  to fetch public keys at startup and require PASETO verification. Publish a
+  gateway supporting /.well-known/paseto-keys before enabling consumers; startup
+  errors restart under Swarm policy, and expired keys never permit fallback.
+  Keep public ORIGIN as the audience; signed admin=true supplements app markers.
+  Callbacks stay
   protected. Notes admin paths and all Dozzle paths use `/forward_auth/admin`;
   trusted markers are stripped/reissued after auth. Files' separate public share
   host allows only `/s/*` / `/static/*`, strips identity and returns 404 elsewhere.

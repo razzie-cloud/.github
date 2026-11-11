@@ -36,7 +36,11 @@ dependencies, volumes, hostname, Caddy policy and gateway allowlist together:
 ## Preserve proxy policy
 
 Use Caddy `route` ordering: strip incoming identity, forward auth, copy verified
-headers, then proxy. Protected management includes `/_auth/callback`. Exact app
+headers (UUID, name and X-Auth-Request-Token), then proxy. Configure
+ACCESS_GATEWAY_URL=http://access-gateway:8080 for Files/Notes and wait for gateway
+readiness before their startup key fetch. PASETO verification must fail closed
+after key expiry; use the public app ORIGIN as audience. Never expose tokens in
+the whoami echo. Protected management includes `/_auth/callback`. Exact app
 origins belong in gateway `FORWARD_AUTH_ORIGINS`.
 
 - Ordinary apps use `/forward_auth`. Dozzle uses `/forward_auth/admin` everywhere;

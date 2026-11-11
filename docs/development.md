@@ -267,3 +267,16 @@ to infra's Makefile without fetching new tags. `make deploy-latest` selects
 releases and then deploys. Use `INFRA_ENV_FILE=/absolute/path` to select another
 file, or pass image tags, `DOCKER_CONTEXT`, and `STACK_NAME` as Make command-line
 assignments. See [infra/README.md](../infra/README.md) for standalone use.
+
+## Signed identity between services
+
+Files and Notes in this stack set `ACCESS_GATEWAY_URL=http://access-gateway:8080`.
+They fetch `/.well-known/paseto-keys` at startup and refresh expired public-key
+sets on use. Caddy strips incoming `X-Auth-Request-Token` and copies the gateway's
+PASETO beside UUID/name. Assertions bind the app origin, method, URI and identity;
+Notes also verifies the signed admin authorization. Public shares and private
+health probes keep their existing access rules. Keys rotate daily in shared
+Redis/Valkey with overlapping public keys. Discovery outages cannot extend trust
+past cached expiry. Upgrade/publish the gateway before enabling verification in
+Files/Notes; select published images before rollout. See the gateway's
+[signed identity contract](https://github.com/razzie-cloud/access-gateway/blob/master/docs/reference.md#signed-proxy-identity).

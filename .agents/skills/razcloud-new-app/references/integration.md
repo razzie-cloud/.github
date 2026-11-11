@@ -20,14 +20,20 @@ Synchronize the actual app's names and HTTP paths across affected files.
 ## Authentication and routing
 
 For a protected app, adapt the complete Files/Notes policy: strip incoming
-`X-Auth-Request-User` / `X-Auth-Request-Name`, call `/forward_auth`, copy verified
+`X-Auth-Request-User` / `X-Auth-Request-Name` / `X-Auth-Request-Token`,
+call `/forward_auth`, copy verified
 identity, then proxy. Protect every path including `/_auth/callback`; the gateway
-redeems callbacks through forward auth. The app uses the verified UUID. Add its
+redeems callbacks through forward auth. The app verifies the PASETO before using the UUID. Configure ACCESS_GATEWAY_URL
+in both stacks (private http://access-gateway:8080 is supported), fetch
+/.well-known/paseto-keys at startup and refresh expired key sets. Preserve
+one-minute assertions, request binding, issuer/audience and UUID/name equality.
+Never fall back to unsigned identity or expired keys after a fetch failure. See
+access-gateway/docs/reference.md#signed-proxy-identity for the contract. Add its
 exact origin to the gateway allowlist in both stacks. Align `ORIGIN`, gateway
 origins, `LANDING_ORIGIN`, scheme and port with external browser URLs.
 
 Admin routes use `/forward_auth/admin`. Strip/reissue any trusted app marker
-only after authorization. Notes' `/v1/admin/*` shows mixed-policy ordering;
+only after authorization; the app must also require signed admin=true. Notes' `/v1/admin/*` shows mixed-policy ordering;
 Dozzle shows whole-host admin policy. A general route must not shadow admin routes.
 
 Public apps need no SSO unless the product calls for it. Public capabilities

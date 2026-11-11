@@ -346,3 +346,19 @@ Keep changes scoped to the task and owning repository. For cross-component work,
 check HTTP paths, config names, secret names, database migrations, image tags, and
 Caddy labels together. Keep credentials and local environment files out of Git.
 Deployment and host changes affect a real server and require task authorization.
+
+## Signed gateway identity
+
+Gateway forward-auth responses include X-Auth-Request-Token (PASETO v4.public)
+beside UUID/name. Daily UTC signing keys are atomically reserved in the shared
+Redis/Valkey namespace, prepublish the next public key and retain a two-minute
+previous-key overlap. GET/HEAD /.well-known/paseto-keys exposes public keys only.
+Files/Notes enable verification with ACCESS_GATEWAY_URL / --access-gateway-url;
+both stacks set the private gateway origin. Fetch on startup and refresh on
+expired/unknown-key use; never trust expired cached keys during an outage.
+Verify issuer, public app ORIGIN audience, one-minute lifetime, exact method/URI,
+and matching UUID/name. Notes admin routes require signed admin=true plus the
+existing proxy marker. Empty URL retains legacy proxy mode. Strip/copy the token
+with other identity headers, exclude public shares/health, and never echo tokens.
+Keep the independent Files/Notes verifier copies and tests synchronized. The
+full protocol is in access-gateway/docs/reference.md#signed-proxy-identity.

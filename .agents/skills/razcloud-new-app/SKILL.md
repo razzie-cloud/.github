@@ -23,8 +23,8 @@ Read the selected example's current guide/source; borrow conventions selectively
 | Internal provisioning API | `database-broker/` |
 
 A new app does not need S3, crypt, River, WebAuthn, Redis or sharing because an
-example has them. Gateway owns accounts/SSO; consuming apps normally trust its
-verified UUID rather than building their own login or using usernames as owners.
+example has them. Gateway owns accounts/SSO; consuming apps verify its signed UUID rather than
+building their own login or using usernames as owners.
 
 For an S3 app, decide data authority before designing persistence. Files/Notes
 use owner-configured connections and optional rclone crypt, not an operator-wide
@@ -61,7 +61,12 @@ Adopt conventions that apply:
 - Apps needing PostgreSQL support direct URI/password-file configuration and
   `POSTGRES_URI_FROM` broker discovery. Bound startup retries/discovery and keep
   credentials out of logs. Redis discovery is optional.
-- Trusted-proxy UUID identity, owner-scoped queries and authorization before
+- Configure ACCESS_GATEWAY_URL / --access-gateway-url for protected apps. Follow
+  Files/Notes internal/gatewayidentity: fetch public keys at startup, refresh
+  expired sets/unknown keys with bounded requests, and fail closed after expiry.
+  Verify v4.public issuer/audience/time, method/URI, matching UUID/name and signed
+  admin policy where required. Keep the gateway assertion in server headers only.
+- Verified gateway UUID identity, owner-scoped queries and authorization before
   mutations/storage access. Reject spoofed identity, bound request bodies and
   validate mutation origins. Preserve safe template/Markdown rendering.
 - Interactive UIs embed local HTMX/PicoCSS with licenses, shared logo and distinct
