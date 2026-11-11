@@ -57,7 +57,7 @@ cache is read-only. Local HTTP/S3/TLS fixture tests run with loopback socket acc
 - In access-gateway, Files and Notes: go build ./...; go vet ./...; go test ./...;
   go test -race ./.... PostgreSQL/Redis integration cases skip when disposable
   TEST_DATABASE_URL/TEST_REDIS_URL are absent. In-memory S3 fixtures run locally.
-- Infra's 13 isolated fake-Docker tests cover preparation/reuse, additions,
+- Infra's 15 isolated fake-Docker tests cover preparation/reuse, additions,
   permission changes, failed/truncated/interrupted generation, partial resources,
   lost/replaced masters, custom SSH context targeting, rotation, revocation,
   staged migration, conflicts and explicit none mode. Secret stdin is consumed
