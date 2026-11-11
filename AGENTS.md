@@ -99,6 +99,10 @@
 - Named per-user web directories map directly to S3 buckets/prefixes. Embedded
   rclone S3 and optional crypt APIs handle storage; there is no rclone subprocess,
   local sync, RC API, or custom encryption. UI assets use embedded HTMX/PicoCSS.
+- File previews cover bounded UTF-8 text, safely formatted Markdown, native PDFs,
+  images, audio, and video on personal and public-share download routes. Text and
+  Markdown have a 2 MiB limit; media byte ranges preserve encrypted streaming.
+  Browser codec support varies. Keep document sandboxing and share scope checks.
 - Identity is the auth proxy's `X-Auth-Request-User` UUID. Management metadata queries
   are owner-scoped. Public shares use random capability links on a separate
   `SHARE_ORIGIN` hostname (`shared-files`), with read-only file/folder access and
