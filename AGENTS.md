@@ -318,7 +318,8 @@ on them, and update this guide when they change.
   GeoIP and 0x40hues use fixed stack defaults with optional overrides and are excluded from
   tag discovery. Keep other current service versions out of stack files and all
   current versions out of README.md and AGENTS.md. Root `make latest-tags` selects
-  the highest stable numeric release tags from the four platform service remotes
+  the highest stable numeric release tags from the five platform service remotes
+  (gateway, broker, Files, Notes and landing)
   without changing source checkouts or parent pins. Root `make config` and `make deploy` delegate to
   infra's Makefile, which loads and exports the selected environment file.
   `make deploy-latest` combines tag selection and deployment; do not run it as

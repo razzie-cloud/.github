@@ -250,7 +250,8 @@ make deploy
 
 `latest-tags` uses Bash, Git, awk, and GNU coreutils (`sort -V`). It selects the highest
 numeric stable release tag (`MAJOR.MINOR.PATCH`, with an optional `v` prefix)
-for the four platform services, fetches it into each service repository, and
+for the five platform services (gateway, broker, Files, Notes and landing),
+fetches it into each service repository, and
 writes those image tags to ignored `infra/.env`. RazChess, UUID, GeoIP and 0x40hues use
 fixed stack defaults with optional overrides in `.env`; this command does not
 query their remotes or change their overrides.
