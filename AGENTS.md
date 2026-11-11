@@ -156,8 +156,9 @@
 ### landing
 
 - Independent `github.com/razzie-cloud/landing` Go module and homepage image.
-  Read `landing/AGENTS.md`. A standard-library Go renderer produces static HTML
-  at container startup; Caddy serves only the result, styles and local assets.
+  Read `landing/AGENTS.md`. A standard-library Go HTTP service embeds its assets
+  and pre-renders HTML in memory at startup. It listens on SERVICE_PORT (8080),
+  serves only the public page/assets, and exposes GET/HEAD /healthz and /readyz.
 - `DOMAIN`, `SCHEME` and optional `PUBLIC_PORT` drive metadata and links. Sign in
   always links to `auth.<DOMAIN>`. Optional `APPS_CONFIG_FILE` JSON lists cards
   and navigation entries with bundled SVG presets; Files/Notes are examples.

@@ -163,7 +163,7 @@ content management use /forward_auth and owner-scoped lookups. See
 
 The root [docker-compose.yml](../docker-compose.yml) builds all four Go services from
 their submodules using host build networking, matching the gateway's standalone
-Compose setup, plus the static landing-page image from `landing/`.
+Compose setup, plus the Go landing-page service image from `landing/`.
 The homepage joins only the web network, is public, and has no database dependency.
 The broker provisions the gateway's and files' PostgreSQL databases
 and the gateway's numbered Valkey database. The gateway discovers
@@ -202,8 +202,8 @@ docker compose config --quiet
 
 ### Run service checks
 
-All five Go modules, including the landing renderer, declare Go 1.27. Run Go commands from the individual service
-directory; this parent has no Go module or workspace.
+All five Go modules, including the landing service, declare Go 1.27. Run Go
+commands from the individual service directory; this parent has no Go module or workspace.
 
 ```sh
 (cd access-gateway && go build ./... && go test ./...)
