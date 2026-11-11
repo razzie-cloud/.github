@@ -15,7 +15,7 @@ Exact copies are kept at these paths in the parent checkout:
 - `files/internal/web/static/razzie-cloud-logo.png`
 - `notes/docs/mockups/assets/razzie-cloud-logo.png` (static mockups)
 - `notes/internal/web/static/razzie-cloud-logo.png`
-- `infra/landing/assets/razzie-cloud-logo.png`
+- `landing/assets/razzie-cloud-logo.png`
 
 The service headers, favicons, and HTML mockups use the service-local assets;
 the landing page and Notes mockups use their own asset copies. Root and profile documentation reference

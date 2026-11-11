@@ -12,6 +12,7 @@ use and tracks their independent repositories as Git submodules.
 | [database-broker](database-broker/README.md) | Creates per-service PostgreSQL and Valkey databases and returns their connection URIs |
 | [files](files/README.md) | Browse, upload, and share S3 files, with optional rclone encryption |
 | [notes](notes/README.md) | Markdown notes with user-managed S3 connections, optional rclone encryption, and search |
+| [landing](landing/README.md) | Public homepage with configurable domain, app cards, and bundled icon presets |
 | [infra](infra/README.md) | Deploys the platform with Docker Swarm and Caddy; includes optional NixOS host configuration |
 
 Caddy checks app access with the gateway. Services ask the broker for a database
@@ -44,7 +45,7 @@ then sign in. The token is logged only once when generated.
 
 | Local URL | Use |
 | --- | --- |
-| <http://localhost:8080> | Homepage: project links, Files, and sign-in |
+| <http://localhost:8080> | Homepage: project links, configurable apps, and sign-in |
 | <http://auth.localhost:8080> | Gateway: sign in, add users, and enroll devices |
 | <http://whoami.localhost:8080> | Whoami: see the identity passed to a protected app |
 | <http://files.localhost:8080> | Files: connect your S3 storage and add a directory |

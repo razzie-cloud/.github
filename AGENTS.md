@@ -3,7 +3,7 @@
 ## Repository boundaries and Git workflow
 
 - This is the Razzie Cloud parent repository. `access-gateway/`, `database-broker/`, `files/`,
-  `notes/`, and `infra/` are Git submodules with separate histories and GitHub remotes
+  `notes/`, `landing/`, and `infra/` are Git submodules with separate histories and GitHub remotes
   under `razzie-cloud`. Use standard `git submodule` commands.
 - Keep root documentation and coordination files in the parent. Change service
   code and deployment files in their owning submodule. Do not copy child source
@@ -153,6 +153,19 @@
   loopback TEST_DATABASE_URL and random schemas; S3 fixtures start automatically.
   Tests include independent rclone filesystem compatibility and encrypted rebuild.
 
+### landing
+
+- Independent `github.com/razzie-cloud/landing` Go module and homepage image.
+  Read `landing/AGENTS.md`. A standard-library Go renderer produces static HTML
+  at container startup; Caddy serves only the result, styles and local assets.
+- `DOMAIN`, `SCHEME` and optional `PUBLIC_PORT` drive metadata and links. Sign in
+  always links to `auth.<DOMAIN>`. Optional `APPS_CONFIG_FILE` JSON lists cards
+  and navigation entries with bundled SVG presets; Files/Notes are examples.
+- Gateway, Files and Notes use `LANDING_ORIGIN` / `--landing-origin` for their
+  shared cloud-home link; the separate service-name link opens the app.
+- Run build/vet/race tests in `landing/`. Images and commits must be published
+  before deploying parent pins or selecting image tags.
+
 ### infra
 
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Valkey,
@@ -160,7 +173,7 @@
   Caddy Docker Proxy, a public landing page at `razzie.cloud`, and a whoami demo.
   Swarm's `DOMAIN` setting defaults to `razzie.cloud` and controls public hostnames,
   auth origins, and landing-page links and metadata.
-  `infra/landing/` packages the static page in `ghcr.io/razzie-cloud/landing`;
+  `landing/` is an independent submodule that packages the static page in `ghcr.io/razzie-cloud/landing`;
   build/publish it before selecting `LANDING_IMAGE_TAG` in infra's environment.
   The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
   deployment labels and publishes ports 80/443 in host mode to preserve visitor
@@ -181,7 +194,7 @@
 
 ## Local development and verification
 
-- All four Go modules declare Go 1.27. Run module commands inside the relevant
+- All five Go modules declare Go 1.27. Run module commands inside the relevant
   submodule; the parent has no `go.mod` or `go.work`.
 - Format changed Go files with `gofmt`. For service changes run `go build ./...`
   and `go vet ./...` in the affected module, plus relevant tests.
@@ -211,8 +224,8 @@
   and routes by hostname: public homepage `http://localhost:8080`, gateway
   `http://auth.localhost:8080`, whoami `http://whoami.localhost:8080`, Files
   `http://files.localhost:8080`, Notes `http://notes.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
-  `LOCAL_PORT` overrides the shared port. Compose builds `infra/landing/` with
-  local service links; rebuild the landing image after changing the port or assets.
+  `LOCAL_PORT` overrides the shared port. Compose builds `landing/` with
+  runtime domain/port settings and an optional app-list JSON mount; rebuild only after source or asset changes.
   The broker provisions the gateway's
   and files' PostgreSQL databases and the gateway's numbered Valkey database;
   the gateway uses `REDIS_URI_FROM` with the `valkey` adapter path for credentials.

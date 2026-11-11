@@ -23,10 +23,12 @@ Compose builds the gateway from the checked-out source and tags it as
 `ghcr.io/razzie-cloud/access-gateway:dev`. Override `ACCESS_GATEWAY_IMAGE_TAG`
 in `.env` to change the local build's tag.
 
-The public homepage is at <http://localhost:8080>. Compose builds its static
-Caddy image from `infra/landing/`, with Files and sign-in links pointing to the
-local hostnames and `LOCAL_PORT`. After changing the page, logo, or shared port,
-run `docker compose up --build -d landing caddy` to rebuild it.
+The public homepage is at <http://localhost:8080>. Compose builds the independent
+`landing/` submodule. Its optional `LANDING_APPS_FILE` JSON mount defaults to the
+Files/Notes example. Domain, scheme and `LOCAL_PORT` are rendered at container
+startup. Recreate containers after port or config changes; rebuild the landing
+image only after source or asset changes. Services receive `LANDING_ORIGIN` so
+their cloud logo returns here while the service name opens the app.
 
 Find the `bootstrap.token_created` event and its `bootstrap_token` field in the
 gateway logs. Open <http://auth.localhost:8080>, create the first administrator
@@ -161,7 +163,7 @@ content management use /forward_auth and owner-scoped lookups. See
 
 The root [docker-compose.yml](../docker-compose.yml) builds all four Go services from
 their submodules using host build networking, matching the gateway's standalone
-Compose setup, plus the static landing-page image from `infra/landing/`.
+Compose setup, plus the static landing-page image from `landing/`.
 The homepage joins only the web network, is public, and has no database dependency.
 The broker provisions the gateway's and files' PostgreSQL databases
 and the gateway's numbered Valkey database. The gateway discovers
@@ -200,7 +202,7 @@ docker compose config --quiet
 
 ### Run service checks
 
-All four services declare Go 1.27. Run Go commands from the individual service
+All five Go modules, including the landing renderer, declare Go 1.27. Run Go commands from the individual service
 directory; this parent has no Go module or workspace.
 
 ```sh

@@ -5,11 +5,14 @@ services:
     image: ghcr.io/razzie-cloud/landing:local
     pull_policy: build
     build:
-      context: ./infra/landing
-      args:
-        FILES_ORIGIN: http://files.localhost:${LOCAL_PORT:-8080}
-        AUTH_ORIGIN: http://auth.localhost:${LOCAL_PORT:-8080}
-        NOTES_ORIGIN: http://notes.localhost:${LOCAL_PORT:-8080}
+      context: ./landing
+    environment:
+      DOMAIN: localhost
+      SCHEME: http
+      PUBLIC_PORT: ${LOCAL_PORT:-8080}
+      APPS_CONFIG_FILE: /etc/landing/apps.json
+    volumes:
+      - ${LANDING_APPS_FILE:-./landing/apps.example.json}:/etc/landing/apps.json:ro
     networks:
       - web
 
@@ -85,6 +88,7 @@ services:
       POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/access_gateway/uri
       REDIS_URI_FROM: http://database-broker:8080/v1/instances/valkey/access_gateway/uri
       ORIGIN: http://auth.localhost:${LOCAL_PORT:-8080}
+      LANDING_ORIGIN: http://localhost:${LOCAL_PORT:-8080}
       RP_ID: auth.localhost
       RP_NAME: Razzie Cloud local
       # Gateway ports are private; Caddy reaches it over Docker networks.
@@ -123,6 +127,7 @@ services:
     environment:
       POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/files/uri
       ORIGIN: http://files.localhost:${LOCAL_PORT:-8080}
+      LANDING_ORIGIN: http://localhost:${LOCAL_PORT:-8080}
       SHARE_ORIGIN: http://shared-files.localhost:${LOCAL_PORT:-8080}
       CAST_SHARE_TTL: ${CAST_SHARE_TTL:-6h}
       # This exception is limited to the optional disposable S3 demo.
@@ -142,6 +147,7 @@ services:
     environment:
       POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/notes/uri
       ORIGIN: http://notes.localhost:${LOCAL_PORT:-8080}
+      LANDING_ORIGIN: http://localhost:${LOCAL_PORT:-8080}
       # Users configure their own connections in Notes. This operator exception
       # permits only the optional local S3 fixture, as in Files.
       S3_ALLOWED_PRIVATE_ENDPOINTS: s3-demo:9000

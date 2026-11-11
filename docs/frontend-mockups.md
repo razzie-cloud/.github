@@ -1,9 +1,9 @@
 # Frontend design mockups
 
-The separate [Razzie Cloud landing page](../infra/landing/README.md) introduces
+The separate [Razzie Cloud landing page](../landing/README.md) introduces
 the project at `razzie.cloud` and links to GitHub, Files, and the gateway.
-Its [light](../infra/landing/previews/desktop-light.png) and
-[dark](../infra/landing/previews/desktop-dark.png) screenshots show the public
+Its [light](../landing/previews/desktop-light.png) and
+[dark](../landing/previews/desktop-dark.png) screenshots show the public
 homepage design. Both stacks now include a static landing service: locally at
 `http://localhost:8080` and in Swarm at `https://razzie.cloud` after deployment.
 
