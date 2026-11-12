@@ -26,6 +26,7 @@ Open the screenshots directly:
 - [Files: nested file browser](../files/docs/mockups/browse-desktop.png)
 - [Gateway: account management](../access-gateway/docs/mockups/index-desktop.png)
 - [Gateway: passkey sign-in](../access-gateway/docs/mockups/login-desktop.png)
+- [Gateway: administrator access denied](../access-gateway/docs/mockups/admin-denied-desktop.png)
 - [Notes: note library](../notes/docs/mockups/index-desktop.png)
 - [Notes: Markdown editor](../notes/docs/mockups/edit-desktop.png)
 - [Files: storage connections](../files/docs/mockups/connections-desktop.png)
@@ -42,6 +43,7 @@ Dark versions are also available:
 - [Files: nested file browser](../files/docs/mockups/dark/browse-desktop.png)
 - [Gateway: account management](../access-gateway/docs/mockups/dark/index-desktop.png)
 - [Gateway: passkey sign-in](../access-gateway/docs/mockups/dark/login-desktop.png)
+- [Gateway: administrator access denied](../access-gateway/docs/mockups/dark/admin-denied-desktop.png)
 - [Notes: note library](../notes/docs/mockups/dark/index-desktop.png)
 - [Notes: Markdown editor](../notes/docs/mockups/dark/edit-desktop.png)
 
@@ -60,6 +62,7 @@ Then visit:
 - [Files](http://127.0.0.1:8765/files/docs/mockups/index.html)
 - [Gateway](http://127.0.0.1:8765/access-gateway/docs/mockups/index.html)
 - [Gateway sign-in](http://127.0.0.1:8765/access-gateway/docs/mockups/login.html)
+- [Gateway admin access denied](http://127.0.0.1:8765/access-gateway/docs/mockups/admin-denied.html)
 - [Notes](http://127.0.0.1:8765/notes/docs/mockups/index.html)
 - [Files storage settings](http://127.0.0.1:8765/files/docs/mockups/connections.html)
 - [Notes storage settings](http://127.0.0.1:8765/notes/docs/mockups/storage.html)
@@ -101,6 +104,31 @@ are compact rows with disclosure controls for renaming/removal; sessions and use
 identifiers retain table layouts. The right column keeps enrollment available
 without pushing activity far down the page. The sign-in and registration screens
 use a two-column panel with one clear primary action.
+
+The administrator-access denial concept uses a centered branded 403 panel with
+cloud-home and account-management exits. Both themes use absolute asset and
+navigation URLs so the page can be displayed on a protected app hostname.
+Its assets target the documented loopback preview server; the two exit links
+target the public cloud and gateway. Chromium checks covered both themes and
+four widths on two origins, including a simulated HTTP 403 response, plus keyboard
+focus, theme navigation and locally intercepted exit links. See the gateway screen
+guide for previews, desktop/mobile screenshots and implementation URL/CSP notes.
+The reviewed page is now implemented in the gateway's forward-auth admin denial.
+It preserves HTTP 403, live role checks and the existing SSO flow, uses configured
+absolute asset/navigation URLs, and applies an error-response-only CSP that
+permits gateway styles/images while disabling scripts. Previews remain static
+fixtures; the production page follows the browser's color-scheme preference.
+
+Implementation verification passed gateway `go build ./...`, `go vet ./...`,
+`go test ./...` and `go test -race ./...`, with newly initialized disposable
+loopback PostgreSQL/Redis backends. A temporary browser harness exercised the
+real admin check, session storage, renderer and middleware behind a loopback
+proxy stand-in. Chromium checked both themes at 320, 390, 768 and 1440 pixels,
+including different page/asset hostnames, absolute references, HTTP 403, CSP,
+loaded assets, headings, overflow, keyboard focus and locally intercepted exit
+links. No page/CSP errors or unexpected failed requests/responses were observed;
+desktop/mobile screenshots were visually reviewed. No live deployment, physical
+passkeys or production backends were used.
 
 See the [Gateway screen guide](../access-gateway/docs/mockups/README.md).
 
