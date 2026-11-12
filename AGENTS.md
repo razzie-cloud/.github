@@ -401,3 +401,9 @@ mapping/crypt ownership scoped, use the connection creator for Files S3 secrets,
 and include effective physical prefixes in Notes crypt recovery. Database triggers
 allow mapping references only to owned personal or shared connections. Notes shared
 policy changes invalidate conditional-write revisions across all attached owners.
+
+Personal/shared Files and Notes connections also support an optional fixed bucket.
+Mappings resolve it server-side before storage access and under connection row
+locks at save; SQL triggers reject overrides or restrictions incompatible with
+existing mappings across users. New connections default path-style addressing
+off; existing choices are preserved and the local S3 demo still needs it enabled.

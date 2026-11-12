@@ -393,3 +393,36 @@ connections. Add/Edit screenshots were refreshed. Both modules passed
 Database integration tests skipped because `TEST_DATABASE_URL` was unset for
 this styling-only follow-up; loopback fixture tests ran. No live services were
 restarted or deployed.
+
+## Connection actions, fixed buckets and addressing defaults
+
+Files and Notes now offer **Use connection** on personal and shared cards. The
+selected connection is preselected in mapping setup. **Fixed bucket (optional)**
+restricts mappings to one bucket, prefilled and read-only in the browser. Switching
+back to an unrestricted connection restores the user's draft bucket. The server
+resolves omitted buckets and rejects explicit overrides before S3 access; storage
+constructors and locking database triggers enforce the same restriction. Applying
+or changing a restriction must remain compatible with every user's existing
+mappings. Clearing it preserves saved mapping buckets. New connection forms and
+SQL defaults use virtual-hosted addressing; existing path-style choices remain
+unchanged and the switch stays available for compatible providers/local fixtures.
+
+The previews include a fixed Cloud storage bucket, unrestricted Team archive,
+and personal Use actions. Both themes' connection lists, empty forms and Add/Edit
+screenshots were refreshed. Production also loads local Pico icon overrides before
+Pico so initial rendering respects the unchanged strict image CSP.
+
+Verification used disposable loopback PostgreSQL and in-memory S3. Both modules
+passed build, vet, full tests and race tests. New regression coverage checks
+personal/shared creation defaults, fixed-bucket persistence and mapping prefill,
+HTTP/repository/storage/SQL override rejection, compatible/incompatible restriction
+updates, and updates racing with another user's mapping creation. Notes now
+propagates connection-update constraint errors as conflicts, retaining drafts.
+Chromium covered 96 production layouts (lists plus fixed and personal mapping
+forms) across both services, themes, roles and 320/390/768/1440 widths, including
+real creates, retained validation drafts, connection switching and forged submits.
+Static previews passed 64 layout cases at those widths, with all Use actions,
+optional/fixed forms, empty states and draft retention; entered values never
+appeared in requests. Screenshots were inspected visually. Temporary browser
+harnesses were removed. No live Docker services, production S3 or deployment was
+used.
