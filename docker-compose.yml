@@ -143,6 +143,7 @@ services:
       ORIGIN: http://files.localhost:${LOCAL_PORT:-8080}
       LANDING_ORIGIN: http://localhost:${LOCAL_PORT:-8080}
       SHARE_ORIGIN: http://shared-files.localhost:${LOCAL_PORT:-8080}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-10737418240}
       CAST_SHARE_TTL: ${CAST_SHARE_TTL:-6h}
       # This exception is limited to the optional disposable S3 demo.
       S3_ALLOWED_PRIVATE_ENDPOINTS: s3-demo:9000
