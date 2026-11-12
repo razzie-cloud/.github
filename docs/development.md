@@ -279,8 +279,9 @@ Files and Notes in this stack set `ACCESS_GATEWAY_URL=http://access-gateway:8080
 They fetch `/.well-known/paseto-keys` at startup and refresh expired public-key
 sets on use. Caddy strips incoming `X-Auth-Request-Token` and copies the gateway's
 PASETO beside UUID/name. Assertions bind the app origin, method, URI and identity;
-Notes also verifies the signed admin authorization. Public shares and private
-health probes keep their existing access rules. Keys rotate daily in shared
+both apps use the signed current admin role for shared-connection controls.
+Notes admin APIs additionally require the existing trusted proxy marker. Public
+shares and private health probes keep their existing access rules. Keys rotate daily in shared
 Redis/Valkey with overlapping public keys. Discovery outages cannot extend trust
 past cached expiry. Upgrade/publish the gateway before enabling verification in
 Files/Notes; select published images before rollout. See the gateway's
