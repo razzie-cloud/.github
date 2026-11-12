@@ -383,3 +383,13 @@ were inspected visually. Authentication used local signed assertions with real
 verification, rather than a live gateway session. No production S3 or deployment
 was used. Parent/component whitespace checks passed. Nothing was published or
 deployed.
+
+The Sharing block's divider now sits below its controls, separating sharing
+from Name and provider settings. Files/Notes production forms and static
+previews match. Verification covered 96 rendered production/mockup dialog
+cases: both services, light/dark, 320/390/768/1440 pixels, and new/personal/shared
+connections. Add/Edit screenshots were refreshed. Both modules passed
+`go build ./...`, `go vet ./...`, `go test ./...` and `go test -race ./...`.
+Database integration tests skipped because `TEST_DATABASE_URL` was unset for
+this styling-only follow-up; loopback fixture tests ran. No live services were
+restarted or deployed.
