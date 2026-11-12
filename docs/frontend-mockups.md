@@ -130,6 +130,20 @@ links. No page/CSP errors or unexpected failed requests/responses were observed;
 desktop/mobile screenshots were visually reviewed. No live deployment, physical
 passkeys or production backends were used.
 
+The gateway now shares that layout across browser-facing authorization,
+sign-in/callback, API, request-protection, rate-limit, method and static-asset
+errors. Status-specific copy uses the same centered logo, badge and exits.
+`Accept` preferences select JSON or HTML; unqualified JSON-body requests retain
+JSON errors, and gateway HTMX forms keep inline error fragments and drafts.
+See [the response contract](../access-gateway/docs/reference.md#error-responses).
+Build, vet, full tests and race tests passed with disposable loopback
+PostgreSQL/Redis. Chromium covered 104 light/dark layout cases, including different
+page/asset hostnames, keyboard and absolute-link checks, real HTMX validation,
+429 fragment handling with retained drafts, the passkey bridge's explicit JSON
+requests, and a real admin denial negotiated as JSON. No browser/CSP errors or
+unexpected failed asset loads occurred; representative screenshots were visually
+reviewed. Only temporary local fixtures were used for synthetic status variants.
+
 See the [Gateway screen guide](../access-gateway/docs/mockups/README.md).
 
 ## Notes
