@@ -117,8 +117,8 @@ source remain authoritative for service-specific details.
   images, audio, and video on personal and public-share download routes. Text and
   Markdown have a 2 MiB limit; media byte ranges preserve encrypted streaming.
   Browser codec support varies. Keep document sandboxing and share scope checks.
-- Identity is the auth proxy's `X-Auth-Request-User` UUID. Management metadata queries
-  are owner-scoped. Public shares use random capability links on a separate
+- Identity is the auth proxy's `X-Auth-Request-User` UUID. Directory/share metadata queries
+  are owner-scoped; connection reads also admit shared records. Public shares use random capability links on a separate
   `SHARE_ORIGIN` hostname (`shared-files`), with read-only file/folder access and
   optional password sessions. Shares bind to directory IDs and cascade on deletion.
   Only capability discovery is unscoped; subsequent metadata uses the share owner.
@@ -144,7 +144,7 @@ source remain authoritative for service-specific details.
 
 - Go module `github.com/razzie-cloud/notes`; entry `cmd/notes/main.go`.
   Read `notes/AGENTS.md`, its plan correction and architecture document.
-- Storage setup follows Files: owner-managed S3 connections and bucket/prefix
+- Storage setup follows Files: personal or admin-managed shared S3 connections and bucket/prefix
   notebooks with optional rclone crypt. Notes owns its settings, credentials and
   recovery records; no Files database tables or saved connections are shared.
 - S3 is authoritative for Markdown/front matter and attachments. PostgreSQL
@@ -388,3 +388,16 @@ Python 3/OpenSSL 3, preserves existing inputs and refuses implicit rotation. Kee
 its CA key in ignored infra/pki/ and back it up securely. Do not deploy
 or publish as ordinary validation; referenced local commits still require publication
 before parent pointer updates or image references are published.
+
+## Shared S3 connections
+
+Files/Notes retain independent connection stores. Personal connections remain
+owner-managed; shared connections require a verified signed gateway admin for
+creation, editing and removal, even for their creator. No unsigned admin header
+or legacy-proxy role grants this authority. Shared status is immutable in SQL.
+Shared-only user-ID prefixing prepends the mapping owner's UUID before the logical
+prefix and outside crypt; it locks while any user has a mapping attached. Keep
+mapping/crypt ownership scoped, use the connection creator for Files S3 secrets,
+and include effective physical prefixes in Notes crypt recovery. Database triggers
+allow mapping references only to owned personal or shared connections. Notes shared
+policy changes invalidate conditional-write revisions across all attached owners.

@@ -1,5 +1,46 @@
 # Frontend design mockups
 
+## Shared S3 connections
+
+The new [Files admin preview](../files/docs/mockups/shared-connections-admin.html)
+and [Notes admin preview](../notes/docs/mockups/shared-connections-admin.html)
+explore shared connections alongside the implemented forms. Each has a regular-user
+counterpart, a matching dark page and interactive native dialogs. Serve this
+checkout over loopback HTTP as described below. Preview links switch roles,
+themes and services while preserving the current concept.
+
+Admins get a **Shared** switch only at creation, initially off; edits display
+its fixed state. Shared connections reveal a separate **Add user ID as a prefix**
+switch. Cards and mapping previews show both path modes. Admins manage shared
+connections; users can use them without seeing credentials and continue to
+manage their own personal connections. Files and Notes records remain separate.
+
+The implemented path order is bucket, optional gateway UUID, then the user's mapping
+prefix. The prefix option is admin-editable only while no user has an attached mapping;
+existing S3 objects are not moved. Sharing the connection does not share mapping
+settings, although prefix-off mappings to the same location access the same objects.
+These pages use static sample fragments and do not change production behavior.
+
+Review screenshots: [Files list](../files/docs/mockups/shared-connections-admin-desktop.png),
+[Files add](../files/docs/mockups/shared-connection-add-desktop.png),
+[Notes list](../notes/docs/mockups/shared-connections-admin-desktop.png),
+[Notes user view](../notes/docs/mockups/shared-connections-member-desktop.png),
+[Notes dark add](../notes/docs/mockups/dark/shared-connection-add-desktop.png).
+
+Verification: Chromium covered 32 combinations across both services, themes and
+roles at 320, 390, 768 and 1440 pixels. Each case exercised Add/Edit, the default
+and immutable sharing states, conditional prefix controls, both mapping paths,
+error-draft retention, blank stored credentials, Cancel/Close/Escape, focus return,
+simulated saves and theme round trips. No browser errors, failed responses,
+external requests, writes or transmitted draft values were observed. Static
+checks covered all 52 pages/fragments, relative links, matching theme fixtures
+and matching shared scripts/styles. Desktop/mobile screenshots were captured
+and visually inspected. A focused follow-up checks the attached-prefix lock in 16 service/theme/viewport
+combinations and refreshes edit screenshots. Git whitespace checks passed in parent, Files and Notes.
+The initial mockup pass changed no production code/assets and ran no Go checks
+or live S3/auth acceptance. Implementation validation is recorded below. Nothing
+was pushed or deployed.
+
 The separate [Razzie Cloud landing page](../landing/README.md) introduces
 the project at `razzie.cloud` and links to GitHub, Files, and the gateway.
 Its [light](../landing/previews/desktop-light.png) and
@@ -310,3 +351,35 @@ pixels, plus repeated/keyboard/async-fragment navigation, cleanup, reduced motio
 and registration-fragment handling under the existing CSP. Build, vet, and tests
 passed for both modules, with Files race checks also passing. Database/Redis
 integration variables remained unset; these browser checks used local fixtures.
+
+## Shared connection implementation
+
+Files and Notes now implement personal and administrator-managed shared S3
+connections. Admin controls use the gateway's verified signed `admin` claim;
+unsigned headers and legacy proxy mode cannot grant administrative authority.
+Shared status is immutable in handlers, repositories and SQL. Shared-only UUID
+prefixing uses the mapping owner, outside optional crypt, and cannot change while
+any user's mappings are attached. Regular users can use shared connections and
+continue managing their personal connections. Public Files share credential
+resolution and Notes recovery/policy invalidation preserve the right owner scope.
+
+Verification used disposable loopback PostgreSQL and in-memory S3: both modules
+passed `go build ./...`, `go vet ./...`, `go test ./...` and their race suites.
+Race commands were `go test -race ./... -skip '^TestSharedBrowserHarness$'`.
+Only that temporary browser harness was excluded; it ran separately for browser
+checks and was then removed. Final `go test ./...` included every maintained
+test, followed by `go test -race ./internal/app -run '^TestShared'` to cover
+the added shared-prefix/mapping concurrency regression. Tests cover
+signed role checks/demotion, forged headers, immutable sharing, cross-user
+mapping and recovery isolation, actual plain/crypt physical roots, prefix-off
+shared objects, read-only changes and Notes validator invalidation for all owners.
+
+Chromium checked 64 production layouts across both services, themes, roles and
+320/390/768/1440-pixel widths. Real Add/Edit, conditional switches after swaps,
+blank stored credentials, validation/retry with retained drafts, save focus,
+connection creation, mapping creation and effective user paths passed. There
+were no unexpected browser/CSP errors or failed responses; rendered screenshots
+were inspected visually. Authentication used local signed assertions with real
+verification, rather than a live gateway session. No production S3 or deployment
+was used. Parent/component whitespace checks passed. Nothing was published or
+deployed.
