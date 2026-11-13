@@ -209,7 +209,7 @@ source remain authoritative for service-specific details.
 
 ## Local development and verification
 
-- All five Go modules declare Go 1.27. Run module commands inside the relevant
+- All service Go modules and the infra helper module declare Go 1.27. Run module commands inside the relevant
   submodule; the parent has no `go.mod` or `go.work`.
 - Format changed Go files with `gofmt`. For service changes run `go build ./...`
   and `go vet ./...` in the affected module, plus relevant tests.
@@ -378,13 +378,13 @@ Keep independent discovery implementations/tests synchronized, including broker'
 legacy startup adapter. Never log URLs/raw HTTP errors or retry without auth.
 
 Local Compose uses independent development policy and ignored .local credentials;
-run make local-auth with Go/Python before starting. docker-compose.none.yml resets
+run make local-auth with Go before starting. docker-compose.none.yml resets
 auth mounts explicitly and needs no token files. Production deploy.sh delegates to
-Python 3 for Swarm-only master generation, scoped client secrets, versioned policy,
+Go for Swarm-only master generation, scoped client secrets, versioned policy,
 verified TLS, staged migration and bounded convergence. Read infra's broker auth
 guide and run its fake-Docker tests when changing lifecycle behavior. For a new
 installation, make broker-pki automates an internal CA and broker TLS secret using
-Python 3/OpenSSL 3, preserves existing inputs and refuses implicit rotation. Keep
+Go 1.27, preserves existing inputs and refuses implicit rotation. Keep
 its CA key in ignored infra/pki/ and back it up securely. Do not deploy
 or publish as ordinary validation; referenced local commits still require publication
 before parent pointer updates or image references are published.

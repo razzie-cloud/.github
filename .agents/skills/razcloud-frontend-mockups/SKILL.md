@@ -75,7 +75,7 @@ fragments cover most interactions here.
 Serve parent-linked previews over loopback HTTP:
 
 ```sh
-python3 -m http.server 8765 --bind 127.0.0.1
+go run scripts/serve.go
 ```
 
 Open `/files/docs/mockups/index.html`, for example. `file://` prevents normal

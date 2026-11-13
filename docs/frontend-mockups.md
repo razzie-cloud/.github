@@ -95,7 +95,7 @@ dark versions of the current screen. Dark presentation is scoped to the mockups.
 For clickable previews, run this from the **Razzie Cloud parent checkout**:
 
 ```sh
-python3 -m http.server 8765 --bind 127.0.0.1
+go run scripts/serve.go
 ```
 
 Then visit:

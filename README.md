@@ -21,7 +21,7 @@ connection, then connect directly to their data stores. File contents stay in S3
 ## Try it locally
 
 You need Git with GitHub SSH access and Docker with the Compose plugin, using a
-local Docker daemon. Go 1.27 and Python 3 prepare independent development broker
+local Docker daemon. Go 1.27 prepares independent development broker
 credentials with `make local-auth`.
 
 ```sh

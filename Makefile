@@ -17,4 +17,4 @@ deploy-latest: latest-tags
 
 .PHONY: local-auth
 local-auth:
-	python3 database-broker/scripts/prepare-dev-auth.py --policy dev/broker-clients.yml --directory .local/broker-auth --deployment-id razzie-cloud-development
+	go -C database-broker run ./scripts/prepare-dev-auth.go --policy "$(CURDIR)/dev/broker-clients.yml" --directory "$(CURDIR)/.local/broker-auth" --deployment-id razzie-cloud-development

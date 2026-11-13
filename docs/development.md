@@ -15,7 +15,7 @@ from the project root against your local Docker daemon:
 cp .env.example .env
 # Set POSTGRES_PASSWORD and VALKEY_PASSWORD to separate random hex values.
 # Generate each with: openssl rand -hex 24
-make local-auth  # Requires Go 1.27 and Python 3; writes ignored development secrets
+make local-auth  # Requires Go 1.27; writes ignored development secrets
 docker compose up --build -d
 docker compose logs access-gateway
 ```
