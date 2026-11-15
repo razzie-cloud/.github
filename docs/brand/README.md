@@ -18,10 +18,9 @@ Exact copies are kept at these paths in the parent checkout:
 - `landing/assets/razzie-cloud-logo.png`
 
 The service headers, favicons, and HTML mockups use the service-local assets;
-the landing page and Notes mockups use their own asset copies. Root and profile documentation reference
-the master directly. Refresh all active copies and saved preview screenshots when
-the master changes. The old image is retained separately as
-`razzie-cloud-logo-old.png`; it is not an active application asset.
+the landing page and Notes mockups use their own asset copies. Root and profile
+documentation reference the master directly. Refresh all active copies and saved
+preview screenshots when the master changes.
 
 Mockup buttons use navy; warm gold distinguishes the active navigation item.
 Green badges continue to represent statuses such as writable access.
