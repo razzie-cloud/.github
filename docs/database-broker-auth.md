@@ -33,6 +33,10 @@ Other standalone consumer stacks with direct database URIs need no broker resour
 
 ## Swarm
 
+For a new operator environment, follow the [first-time deployment cookbook](deployment-cookbook.md)
+to configure the Docker context, recover existing public TLS inputs and check
+registry access before deployment.
+
 `make deploy` delegates to infra's maintained lifecycle helper. It validates the
 selected broker policy using the published broker image, prepares Swarm-only keys
 and per-app secrets, rolls out policy before consumers, stages existing tokenless
@@ -71,4 +75,5 @@ PostgreSQL, Dragonfly and Valkey. No live Swarm deployment, image publication,
 production probing or global Docker context change is part of this validation.
 Disposable Swarm acceptance remains a release requirement, particularly worker
 placement/health, migration, verified TLS renewal, all-replica revocation, cleanup
-and secret absence from specs/logs. See the original [implementation plan](database-broker-auth-plan.md).
+and secret absence from specs/logs. See the maintained
+[Swarm lifecycle guide](../infra/docs/broker-authentication.md) for current behavior.

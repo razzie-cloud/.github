@@ -227,6 +227,9 @@ for passkey setup, device onboarding, and admin user management, and
 
 ## Updating components
 
+For first-time Swarm deployment from a new operator environment, follow the
+[deployment cookbook](deployment-cookbook.md) before using `make deploy-latest`.
+
 Commit component changes in that component's repository, publish the commit to
 its remote, then record the new pointer in the parent:
 

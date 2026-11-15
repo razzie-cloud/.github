@@ -69,7 +69,10 @@ To try Files without cloud storage, follow the
 
 ## Deploy or develop
 
-For a server installation, start with the [infra guide](infra/README.md).
+For your first deployment from a new environment, follow the
+[deployment cookbook](docs/deployment-cookbook.md), including Docker context,
+broker TLS recovery and registry access. For server installation prerequisites,
+see the [infra guide](infra/README.md).
 For local configuration, service checks, and component updates, see
 [development and maintenance](docs/development.md). Architecture and contributor
 rules live in [AGENTS.md](AGENTS.md).
