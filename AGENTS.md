@@ -61,7 +61,9 @@ source remain authoritative for service-specific details.
   `REDIS_PASSWORD_FILE` supplies Redis credentials. Payloads are cached locally
   with bounded TTLs, while authorization checks Redis key liveness on every hit.
 - The first user is the admin and can create regular users and issue device
-  registration links for them. Signed-in users can issue links for themselves.
+  registration links for them. Signed-in users can issue links for themselves. Admins can also select <new>
+  to invite someone who chooses their own username; the regular user and first
+  passkey are created atomically on enrollment, with no placeholder account.
   Links are single-use, expire after a selected 1–43200 minutes, and have locally
   generated QR codes. Enrollment consumes the link and stores the passkey in
   one PostgreSQL transaction.
@@ -354,6 +356,13 @@ Caddy labels together. Keep credentials and local environment files out of Git.
 Deployment and host changes affect a real server and require task authorization.
 
 ## Signed gateway identity
+
+Authenticated service headers follow the [shared account-header contract](docs/brand/README.md#signed-in-account-header):
+shield, username linked to the public gateway and an inline Administrator badge
+only for admins, also on mobile. Keep the three local `account-header.css` copies
+identical and use this pattern in future apps. Gateway owns sidebar sign-out;
+public/anonymous shells omit account identity. Never use the private gateway
+discovery URL as a browser destination or unsigned role headers for the badge.
 
 Gateway forward-auth responses include X-Auth-Request-Token (PASETO v4.public)
 beside UUID/name. Daily UTC signing keys are atomically reserved in the shared

@@ -54,6 +54,13 @@ Pico breadcrumbs. Preserve focus, contrast, skip links and reduced-motion suppor
 The logo cloud-home link uses configured `LANDING_ORIGIN`; the service-name link
 opens the app. Preserve the supplied logo and existing machine identifiers.
 
+For authenticated headers, follow the **Signed-in account header** contract in
+parent `docs/brand/README.md`: shared local `account-header.css`, shield, linked
+username and inline administrator-only badge. Keep the three production CSS
+copies identical. Account links use the public gateway origin/verified discovery
+issuer, never its private discovery URL. Preserve Gateway's state-owned header
+updates and sidebar sign-out; public/anonymous views omit the account control.
+
 For panel navigation, preserve valid-anchor behavior: repeated activation can
 restart its cue, HTMX-loaded targets work after swapping, and bare/unanchored
 updates do not highlight an arbitrary default panel.

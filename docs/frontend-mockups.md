@@ -1,5 +1,56 @@
 # Frontend design mockups
 
+## Gateway account identity proposal
+
+The updated [light overview](../access-gateway/docs/mockups/index.html) and
+[dark overview](../access-gateway/docs/mockups/dark/index.html) show the signed-in
+username beside Files' shield icon in the upper-right header, with the
+**Administrator** badge on the same line. Regular users omit the role badge.
+The full-width account strip is
+removed; **Sign out** sits below the sidebar navigation and remains visible on
+mobile. Devices and enrollment begin on the same row, with consistent panel
+spacing and aligned header/workspace frames.
+
+Review the [dark desktop screenshot](../access-gateway/docs/mockups/dark/index-desktop.png)
+or [dark mobile screenshot](../access-gateway/docs/mockups/dark/index-mobile.png).
+The [gateway screen guide](../access-gateway/docs/mockups/README.md#account-identity-and-alignment-proposal)
+links both themes and records verification. Chromium passed 10 layout cases
+across both themes and 320/390/768/1440/1920 pixels, plus simulated HTMX actions,
+keyboard focus, navigation, theme switching and sign-out destinations. No browser,
+CSP or network errors occurred; screenshots were visually reviewed. This is a
+record of the mockup checks; production implementation is described below.
+The shield/inline-badge follow-up repeated the checks and refreshed screenshots,
+also checking unbadged regular-user and long-username header variants in-browser.
+
+Gateway, Files and Notes now implement the
+[shared account header](brand/README.md#signed-in-account-header): the same shield,
+gateway-linked username and inline administrator-only badge, using identical
+local `account-header.css` copies. The frontend and new-app skills and parent
+AGENTS.md preserve the pattern for future authenticated services. Files/Notes
+resolve the browser destination from the public discovery issuer, with the
+documented cloud-home convention in legacy proxy mode. No new runtime setting is
+needed. Gateway moves sign-out into its sidebar, removes the old account card,
+aligns devices with enrollment and places Refresh in the devices heading.
+State fragments update the header through HTMX out-of-band swaps.
+
+Implementation checks passed `go build ./...`, `go vet ./...`, `go test ./...`
+and `go test -race ./...` in all three modules. PostgreSQL/Redis integration
+tests skipped because TEST_DATABASE_URL/TEST_REDIS_URL were unset; local fixture
+and signed-identity tests ran. Regression coverage includes escaped usernames,
+signed-role badges, forged legacy-role headers, public account destinations,
+expired verification keys and full-page/fragment header ownership.
+Chromium checked 130 production-template layouts: both themes at
+320/390/768/1440/1920 pixels, all three services with admin/member/long-username
+identities, Gateway login/bootstrap/enrollment and Files public shares. Computed
+account styles matched across services. Real anchor navigation, keyboard focus,
+Gateway sign-out/sign-in, role changes and user-creation retargeting passed with
+locally authored responses and production security headers. No page/console/CSP
+errors occurred. Desktop/mobile screenshots were inspected visually. The updated
+mockups passed another 10 layout cases and their simulated interactions.
+The temporary browser harnesses were removed. Skill validation, synchronized
+asset/helper comparisons and whitespace checks passed. No live passkey, storage,
+publication or deployment acceptance was performed.
+
 ## Files rename and move concept
 
 The [light file-actions preview](../files/docs/mockups/file-actions.html) and

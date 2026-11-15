@@ -71,6 +71,9 @@ Adopt conventions that apply:
   validate mutation origins. Preserve safe template/Markdown rendering.
 - Interactive UIs embed local HTMX/PicoCSS with licenses, shared logo and distinct
   cloud-home/service links. Keep design mockups separate from live writes.
+  Authenticated UIs also follow parent `docs/brand/README.md`'s signed-in header
+  contract: copy the shared local `account-header.css`, shield, gateway-linked
+  username and inline administrator-only badge. Public/anonymous UIs omit it.
 - Private GET/HEAD `/healthz` and cached `/readyz`, bounded background dependency
   checks and stale-result expiry. Inspect current implementations for timing.
   Probe required shared dependencies, not arbitrary user S3 endpoints or broker

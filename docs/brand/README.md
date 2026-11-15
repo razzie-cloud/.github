@@ -31,6 +31,39 @@ module imports, cookie/session namespaces, database names, Docker context/projec
 names, bucket names, and hostnames. Changing those would require separate
 compatibility and infrastructure migrations.
 
+## Signed-in account header
+
+Access Gateway, Files, Notes and future authenticated Razzie Cloud services use
+the same upper-right account control: the existing 20px shield/check line icon,
+the bold username linking to Access Gateway's public account page, then a green
+**Administrator** badge on the same line only for administrators. Regular users
+have no role badge. Keep the shield and username visible on mobile; truncate
+long usernames within the available space rather than widening the page.
+Use the shared spacing, sizes, colors and focus treatment from
+[`account-header.css`](../../access-gateway/internal/web/static/account-header.css).
+The Files/Notes copies must remain identical. Use the existing local SVG, PicoCSS
+and escaped Go templates; keep each independently deployable service's assets local.
+
+The identity markup is `.identity` containing the shield and `.identity-copy`;
+the latter contains `.account-link > strong` and the optional `.badge.green`.
+The username link has `title="Manage your account"`, with the full username as
+the strong element's title. The identity container has `aria-label="Signed-in account"`.
+Settings links belong in app navigation. Sign out belongs in Gateway's sidebar,
+with the note that connected apps are also signed out. Do not add app-local
+sign-out controls or duplicate the identity in a full-width account card.
+
+Gateway uses its configured public `ORIGIN` for the account link. Files/Notes
+use the public issuer pinned by gateway key discovery, never the private
+`ACCESS_GATEWAY_URL` or incoming Host/forwarded headers. Their independent
+`gatewayidentity.AccountURL` helpers remain synchronized. Legacy proxy mode
+uses `auth.<LANDING_ORIGIN host>` with the same scheme/port; invalid or IP-only
+cloud-home settings fall back to `https://auth.razzie.cloud/`.
+The administrator badge uses the current database role in Gateway and the
+verified signed admin claim in consuming apps; unsigned role headers grant none.
+Public share and anonymous shells omit the signed-in identity. Gateway account
+state fragments refresh the header with an HTMX out-of-band swap on sign-in,
+sign-out and account-state updates; full pages have only one header target.
+
 ## Verification
 
 The current logo refresh passed:

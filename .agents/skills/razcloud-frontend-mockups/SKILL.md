@@ -39,6 +39,9 @@ capabilities in source and component guides before writing product claims.
   the workspace, with contextual forms beside main content. Narrow layouts wrap
   navigation and stack columns. Align the header with the application frame;
   long content must not expand a grid column.
+- Signed-in headers follow `docs/brand/README.md`'s account-header contract:
+  shield, username linked to the gateway and an inline Administrator badge only
+  for admins. Reuse local `account-header.css`; keep the identity visible on mobile.
 - Use Pico controls, semantic tables, labels and keyboard focus. Files/Notes use
   `type="checkbox" role="switch"` for binary choices. Pico breadcrumb styling
   expects lowercase `aria-label="breadcrumb"`.
