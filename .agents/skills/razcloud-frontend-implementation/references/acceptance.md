@@ -13,6 +13,10 @@ as relevant. Account swaps update navigation. User creation uses retargeting;
 login/enrollment use the WebAuthn bridge. Exercise error rendering, activity
 refresh, device disclosures, QR display and sign-out when changed.
 
+Devices, Sessions and administrator-only Users each have a Refresh control.
+Check that each refresh replaces its own panel, preserves other panels' drafts
+and registration results, and retains a working control after success or error.
+
 Role/owner filtering is server-side. Current sessions and devices used by live
 sessions retain protected actions. Never render session tokens/ceremony payloads.
 Registration bearer secrets stay in the URL fragment, are removed from history
@@ -40,6 +44,12 @@ replacement; audio/video must stop and release sources. Retain document
 sandboxing, safe Markdown/text handling, authorized downloads and byte ranges.
 Public-share URLs remain capability-scoped on the separate hostname.
 
+Exercise directory cards, folders/parents, breadcrumbs, pagination, settings and
+share management through HTMX while the header stays in place. Repeat folder
+navigation on public shares; downloads/previews and modal Cancel keep their own
+behavior. Check URL/history, direct loads and fresh Back/Forward restoration
+without enabling history snapshots.
+
 Cast checks can stub the SDK for controller behavior. Retain page-specific SDK
 loading/CSP and distinguish stubs from receiver, codec, CORS and hardware checks.
 
@@ -52,6 +62,13 @@ Cover storage first use, connection/notebook selection, read-only settings,
 library/search, reading, editing and attachments as relevant. Saves are explicit
 and conditional; preserve editor validators and conflict drafts. Failed saves
 must not discard entered Markdown. Notes owns its settings independently of Files.
+
+Exercise notebook switching, tags, search/reset, pagination, reader/editor and
+settings navigation through HTMX. Keep sidebar counts/current state, notebook
+context, document title and service-name destination synchronized. Reach the
+editor through a swap and check preview, explicit save and attachment guards;
+cancel and accept navigation with a dirty draft, including history navigation.
+Repeated swaps must not accumulate listeners or leave preview requests running.
 
 Markdown keeps escaping/sanitization and remote-image restrictions. Owner/notebook
 scope and admin APIs remain backend-enforced; do not broaden attachment URLs.

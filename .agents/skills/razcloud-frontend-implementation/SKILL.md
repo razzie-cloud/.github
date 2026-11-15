@@ -65,6 +65,30 @@ For panel navigation, preserve valid-anchor behavior: repeated activation can
 restart its cue, HTMX-loaded targets work after swapping, and bare/unanchored
 updates do not highlight an arbitrary default panel.
 
+## Navigate within a stable layout
+
+Use HTMX for same-app navigation within panels when the surrounding layout can
+stay in place: folder and parent links, breadcrumbs, pagination, filters,
+list/detail views and settings navigation. Keep real `href`/GET form destinations
+for direct loads and normal browser link behavior. Use explicit `hx-get` or
+locally scoped `hx-boost` with an explicit target; avoid blanket body boosting.
+Keep hash-only links native when their target is already present.
+
+Swap the smallest complete region that owns the changing state. Include affected
+navigation, active markers, counts and notebook/directory context, or update them
+explicitly alongside the panel. Return a matching fragment for HTMX requests, or
+select the matching region from a full response. Normal requests must still
+render a complete page. Update the URL/history for navigable views; do not push
+dialog requests or mutations as navigation entries. Keep history snapshots
+disabled and verify fresh restoration with that policy.
+
+Keep downloads, raw documents/media, new-tab links, cross-app links and SSO
+transitions outside panel swaps. Handle expired-session redirects and error
+responses so they leave a usable shell. Initialize browser hooks on inserted
+content without duplicate listeners; cancel pending work and release media when
+content is removed. Before swapping an editor, preserve or explicitly guard
+unsaved drafts: `beforeunload` alone does not protect HTMX navigation.
+
 Read the relevant service section of [acceptance.md](references/acceptance.md)
 for UI boundaries and browser scenarios.
 
@@ -84,6 +108,12 @@ when frame alignment changes. Check headings, overflow, expected controls,
 keyboard use and browser errors. Exercise changed controls after swaps and
 failure responses; inspect screenshots visually. Fixtures do not prove live
 WebAuthn, S3, database concurrency or Cast receiver behavior.
+
+For navigation changes, verify that ordinary panel transitions keep the outer
+shell, the address bar and Back/Forward match the rendered view, direct URLs
+still work, and focus/scroll orient the user. Exercise repeated navigation,
+session expiry, download/preview exclusions and editor draft protection where
+applicable, including hooks on content reached through HTMX.
 
 Run required module checks: format changed Go, `go build ./...`, `go vet ./...`
 and relevant tests. Files/Notes require their race suite; Landing uses

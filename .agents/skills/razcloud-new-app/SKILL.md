@@ -74,6 +74,11 @@ Adopt conventions that apply:
   Authenticated UIs also follow parent `docs/brand/README.md`'s signed-in header
   contract: copy the shared local `account-header.css`, shield, gateway-linked
   username and inline administrator-only badge. Public/anonymous UIs omit it.
+- Use HTMX for same-app panel navigation when the outer layout can stay static.
+  Scope swaps to the region owning the view and its navigation state; preserve
+  direct URLs, normal links, URL/history updates and disabled history snapshots.
+  Follow the [frontend navigation guidance](../razcloud-frontend-implementation/SKILL.md#navigate-within-a-stable-layout)
+  and its verification steps, including browser-hook lifecycle and unsaved drafts.
 - Private GET/HEAD `/healthz` and cached `/readyz`, bounded background dependency
   checks and stale-result expiry. Inspect current implementations for timing.
   Probe required shared dependencies, not arbitrary user S3 endpoints or broker
