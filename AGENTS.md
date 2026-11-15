@@ -117,6 +117,11 @@ source remain authoritative for service-specific details.
   images, audio, and video on personal and public-share download routes. Text and
   Markdown have a 2 MiB limit; media byte ranges preserve encrypted streaming.
   Browser codec support varies. Keep document sandboxing and share scope checks.
+- Files can rename files and move them within one root mapping, with a lazy
+  folder picker and inline subfolder creation. Existing destinations are rejected;
+  both physical paths use ordered locks on one database session with access and
+  revision rechecks. S3 copy/delete is non-atomic; preserve both copies and report
+  partial completion if source removal fails. Public shares remain path-bound.
 - Identity is the auth proxy's `X-Auth-Request-User` UUID. Directory/share metadata queries
   are owner-scoped; connection reads also admit shared records. Public shares use random capability links on a separate
   `SHARE_ORIGIN` hostname (`shared-files`), with read-only file/folder access and

@@ -1,5 +1,60 @@
 # Frontend design mockups
 
+## Files rename and move concept
+
+The [light file-actions preview](../files/docs/mockups/file-actions.html) and
+[dark counterpart](../files/docs/mockups/dark/file-actions.html) explore icon
+actions with hover/focus tooltips, file renaming, and a native Move dialog with
+a collapsible folder hierarchy. The picker offers only the active root and its
+descendants, prevents a move into the current folder, and supports inline
+subfolder creation under the selected destination. Moving between roots is
+unsupported. Conflict fixtures retain drafts; a read-only variant hides writes.
+
+Review the [browser](../files/docs/mockups/file-actions-desktop.png),
+[move picker](../files/docs/mockups/file-move-desktop.png),
+[subfolder creation](../files/docs/mockups/file-move-create-desktop.png), and
+[rename dialog](../files/docs/mockups/file-rename-desktop.png).
+See the [Files screen guide](../files/docs/mockups/README.md#file-actions-rename-and-move)
+for interactions and mobile/dark screenshots. The concept continues to use
+browser-only sample changes and local HTMX fragments.
+
+Chromium checked both themes, writable/read-only variants and 320/390/768/1440
+pixel widths, including rename/move, folder creation, conflicts, invalid and
+duplicate names, keyboard tooltips, focus, cancellation and theme navigation.
+Screenshots were visually reviewed. Local-reference and whitespace checks passed;
+no unexpected requests or browser/CSP errors were observed. No service Go checks,
+live storage/auth/Cast acceptance, publication or deployment ran for this concept.
+
+Files now implements the reviewed icon actions and file Rename/Move dialogs,
+including lazy root-scoped folder branches and inline subfolder creation. Real
+operations use the mapped rclone S3/crypt handle, reject existing destinations,
+and lock both physical paths on one PostgreSQL session before rechecking current
+access and revisions. Copy completes before source removal; partial completion
+is reported. Read-only and public-share write restrictions remain enforced.
+The [Files reference](../files/docs/reference.md#renaming-and-moving-files)
+documents routes, path-bound shares and copy/delete limitations.
+
+Implementation verification passed Files `go build ./...`, `go vet ./...`,
+`go test ./...` and `go test -race ./...`, with disposable loopback PostgreSQL
+and in-memory S3 fixtures. Chromium exercised real handlers/storage for plain and
+encrypted directories in light/dark at 320, 390, 768 and 1440 pixels: 32 writable/
+read-only layout cases plus two public-share checks. Rename conflicts, retained
+drafts, simulated network-error feedback, lazy trees, duplicate-folder feedback,
+folder creation, moves, confirmation dialogs, focus, tooltips and desktop/mobile
+input sizing passed. Rendered screenshots were visually reviewed; no unexpected
+browser/CSP errors occurred. The maintained audio and Cast browser runners also
+passed; Cast used SDK stubs. The temporary acceptance harness was removed before
+the complete test/race runs. Parent/component whitespace checks passed. No live
+gateway session, production storage, Cast hardware, publication or deployment
+was used.
+
+The Share/Cast icon refinement uses a symmetric three-node Share symbol and a
+Cast screen with a cutout around its broadcast waves. Production and all Files
+mockup copies match, and affected screenshots were refreshed. Chromium covered
+24 mockup and 24 production layout cases across light/dark and four widths,
+including tooltip checks. Build, vet, full tests and race tests passed; database
+integration skipped for this icon-only pass with `TEST_DATABASE_URL` unset.
+
 ## Shared S3 connections
 
 The new [Files admin preview](../files/docs/mockups/shared-connections-admin.html)
