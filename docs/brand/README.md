@@ -30,6 +30,14 @@ module imports, cookie/session namespaces, database names, Docker context/projec
 names, bucket names, and hostnames. Changing those would require separate
 compatibility and infrastructure migrations.
 
+## Files and Notes terminology
+
+Call saved S3 provider settings a **connection** in navigation, forms, help,
+errors and documentation. A connection holds the provider, endpoint, credentials
+and access policy; directories in Files and notebooks in Notes use it to select
+a bucket and prefix. Use **storage** for the data, provider or physical location,
+rather than as another name for a connection.
+
 ## Signed-in account header
 
 Access Gateway, Files, Notes and future authenticated Razzie Cloud services use

@@ -67,6 +67,12 @@ source remain authoritative for service-specific details.
   Links are single-use, expire after a selected 1–43200 minutes, and have locally
   generated QR codes. Enrollment consumes the link and stores the passkey in
   one PostgreSQL transaction.
+  Existing-account links can alternatively sign in once without a passkey or
+  device enrollment; enrollment remains the split button's default. Login and
+  enrollment lock the same link row to prevent competing consumption. Redis
+  link sessions follow normal TTL/SSO/revocation and are explicitly labeled;
+  they do not block removal of unrelated devices. Invitations still require
+  their first passkey. See gateway's guide for cross-store failure handling.
 - First-user bootstrap creates a token, stores its SHA-256 hash in PostgreSQL,
   and logs the raw token once. Treat that token as a credential. Sessions live
   in Redis and survive gateway restarts. Replicas share sessions when configured
@@ -306,6 +312,11 @@ on them, and update this guide when they change.
 - Gateway configuration supports broker URI discovery and PostgreSQL/Redis
   flags. `main.go` maps these into `app.Config`; Redis stores sessions, passkey
   ceremonies, and SSO handoffs. Local caches never bypass Redis liveness checks.
+- Gateway usernames allow 1–64 ASCII letters, digits, `_`, `-` and `.`, preserve
+  display capitalization and match case-insensitively. PostgreSQL enforces the
+  format and unique lowercase names; migration refuses invalid names/collisions
+  without merging accounts. Login ceremonies/decoys normalize case uniformly,
+  while Redis completion accepts older mixed-case ceremonies atomically.
 - Gateway login asks for a username and filters passkeys by that account. Unknown
   users receive deterministic decoys; every list is padded to a common credential
   count/ID-length profile. PostgreSQL app_states persists the shared decoy secret.

@@ -1,5 +1,80 @@
 # Frontend design mockups
 
+## Files and Notes connection terminology
+
+Both services call saved S3 provider settings **connections**, following the
+[shared terminology](brand/README.md#files-and-notes-terminology). Page headings,
+setup prompts, field labels, help, errors, documentation and HTML previews use
+this term. Storage still describes data, providers and physical locations.
+Existing routes, form fields, HTMX hooks and database identifiers are preserved.
+The primary connection list and first-connection desktop screenshots were
+refreshed in both preview themes.
+
+Verification passed `go build ./...`, `go vet ./...`, `go test ./...` and
+`go test -race ./...` in Files and Notes, using a writable temporary Go cache
+and local HTTP/S3 fixtures. PostgreSQL integration skipped with
+`TEST_DATABASE_URL` unset. A temporary Chromium harness passed 208 layout cases:
+eight production states across both themes and 320/390/768/1440 pixels, plus
+all 36 changed full HTML previews across the same widths. Another 16 production
+mobile checks supplied screenshots for visual review. HTML structure and
+route/form/HTMX hooks matched the previous versions. Representative desktop and
+mobile screenshots were visually inspected; no page exceptions, missing assets
+or horizontal overflow occurred in these layout fixtures.
+
+The existing Files navigation regression passed on retry after an intermittent
+dialog timing failure; its untouched baseline also passed. Notes' existing
+navigation regression failed with `missing #editor`, which reproduced on an
+untouched temporary copy of HEAD. No navigation implementation changes were
+made. The temporary harnesses were removed. Live SSO/S3, publication and deployment
+were not exercised.
+
+## Gateway registration link: one-time login
+
+The [light registration preview](../access-gateway/docs/mockups/register.html)
+and [dark counterpart](../access-gateway/docs/mockups/dark/register.html) add a
+PicoCSS split-button group to the recipient's enrollment form. **Create passkey
+on this device** remains the default. The attached dropdown offers **Sign in
+once**, which removes device naming and shows a separate sign-in action with
+an explanation of link consumption and browser access.
+
+The same existing-account link can enroll a passkey or sign in once; using
+either consumes it. New-user invitations retain their first-passkey requirement
+in this proposal. Success and expired/used-link states are authored HTMX fixtures;
+no production authentication behavior changes.
+
+Review the [dropdown screenshot](../access-gateway/docs/mockups/register-dropdown-desktop.png)
+or [dark mobile screenshot](../access-gateway/docs/mockups/dark/register-dropdown-mobile.png).
+The [gateway screen guide](../access-gateway/docs/mockups/README.md#registration-link-one-time-login-proposal)
+records the interactions and scope. Brave/Chromium checked 16 page/theme/viewport
+combinations at 320/390/768/1440 pixels, keyboard disclosure/navigation, form
+validation, both modes, success/error fixtures and theme links. No page overflow,
+browser/CSP errors, HTTP failures, external requests or transmitted draft values
+occurred. Twelve screenshots were saved and visually reviewed; whitespace checks
+passed. No Go checks, live authentication, publication or deployment ran.
+
+The gateway now implements this flow in its embedded PicoCSS/HTMX UI. Mode
+changes swap only the controls, keeping the bearer token in the surrounding
+form and sending no draft values in GET requests. One-time login consumes the
+same locked PostgreSQL link row as enrollment and creates a Redis session with
+the normal lifetime and revocation policy. Failed Redis writes roll back link
+consumption; failed commits clean up undisclosed sessions. New-user invitations
+retain first-passkey enrollment. Account activity labels link-login sessions
+explicitly and preserves legacy unknown-device removal protection.
+
+Implementation verification passed gateway `go build ./...`, `go vet ./...`,
+`go test ./...` and `go test -race ./...`, with disposable loopback PostgreSQL
+and Redis. Tests cover request guards, replay, expiry, invitation rejection,
+competing enrollment/login across replicas, failed/ambiguous Redis writes,
+canceled commits, app-session inheritance and revocation. The maintained bridge
+runner passed all 16 scenarios. Brave/Chromium exercised real handlers and
+backends in both themes at 320/390/768/1440 pixels (16 existing-account/invitation
+layouts), keyboard selection, required-name validation, focus after swaps,
+retained tokens on simulated network failure, bootstrap and enrollment with
+two virtual authenticators, login with WebAuthn unavailable, and used-link
+rejection. Screenshots were visually reviewed; no page exceptions occurred.
+The temporary browser harness was removed. Physical passkeys, publication and
+deployment were not exercised.
+
 ## Gateway account identity proposal
 
 The updated [light overview](../access-gateway/docs/mockups/index.html) and
@@ -176,9 +251,9 @@ Open the screenshots directly:
 - [Gateway: administrator access denied](../access-gateway/docs/mockups/admin-denied-desktop.png)
 - [Notes: note library](../notes/docs/mockups/index-desktop.png)
 - [Notes: Markdown editor](../notes/docs/mockups/edit-desktop.png)
-- [Files: storage connections](../files/docs/mockups/connections-desktop.png)
+- [Files: connections](../files/docs/mockups/connections-desktop.png)
 - [Files: edit connection dialog](../files/docs/mockups/connections-edit-desktop.png)
-- [Notes: storage settings](../notes/docs/mockups/storage-desktop.png)
+- [Notes: connections](../notes/docs/mockups/storage-desktop.png)
 - [Notes: edit connection dialog](../notes/docs/mockups/storage-edit-desktop.png)
 - [Notes: notebooks](../notes/docs/mockups/notebooks-desktop.png)
 - [Notes: first notebook](../notes/docs/mockups/notebooks-empty-desktop.png)
@@ -211,8 +286,8 @@ Then visit:
 - [Gateway sign-in](http://127.0.0.1:8765/access-gateway/docs/mockups/login.html)
 - [Gateway admin access denied](http://127.0.0.1:8765/access-gateway/docs/mockups/admin-denied.html)
 - [Notes](http://127.0.0.1:8765/notes/docs/mockups/index.html)
-- [Files storage settings](http://127.0.0.1:8765/files/docs/mockups/connections.html)
-- [Notes storage settings](http://127.0.0.1:8765/notes/docs/mockups/storage.html)
+- [Files connections](http://127.0.0.1:8765/files/docs/mockups/connections.html)
+- [Notes connections](http://127.0.0.1:8765/notes/docs/mockups/storage.html)
 - [Notes notebooks](http://127.0.0.1:8765/notes/docs/mockups/notebooks.html)
 - [Notes first notebook](http://127.0.0.1:8765/notes/docs/mockups/notebooks-empty.html)
 
@@ -233,7 +308,7 @@ The mockup does not change production settings.
 The directory overview gives each bucket/prefix mapping a compact card. The file
 browser uses a stable directory sidebar, a breadcrumb above the title, a readable
 table, and a contextual detail/upload column. Sharing has a focused form with
-guidance beside it. Storage settings show connection cards and an Add connection
+guidance beside it. Connection settings show connection cards and an Add connection
 button; Add/Edit fetch forms into a native HTML5 dialog. The first connection
 form stays inline when no connections exist. The recipient view has a simpler shell
 and only read-only actions.
@@ -323,7 +398,7 @@ it through the gateway; the static mockups remain broader design references.
 
 These are design artifacts with sample data. Forms fetch static HTML fragments
 through the existing vendored HTMX; they never call service APIs. No passkey,
-share, upload, account, or storage connection is created. A small external script
+share, upload, account, or connection is created. A small external script
 opens/closes native storage dialogs and restores focus. No external assets,
 frontend build step, or dependency installation is needed.
 The CSP disables inline scripts/styles and HTMX evaluation/history snapshots.
@@ -390,7 +465,7 @@ retain browser drafts. Full-page fallbacks, legacy edit links, immutable locatio
 and crypt settings, revisions and owner scoping are retained. The mockups remain
 independent sample-data artifacts.
 
-Files and Notes now use the reviewed storage connection cards and native HTML5
+Files and Notes now use the reviewed connection cards and native HTML5
 Add/Edit dialogs. HTMX loads the shared production form and refreshes settings
 after saves. Empty storage keeps its first form inline; direct Add/Edit links
 retain full-page fallback forms. Error fragments preserve browser drafts without
