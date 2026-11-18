@@ -80,6 +80,13 @@ source remain authoritative for service-specific details.
   Goose migrations use a PostgreSQL session lock. Bootstrap initialization and
   enrollment share a transaction advisory lock; only the committed token's
   creator logs it, and startup cannot overwrite or recreate a consumed token.
+- Administrators can disable other users from the Users table after confirming
+  session revocation and blocked login. Disabled state is durable in PostgreSQL;
+  passkey/link login, enrollment, gateway sessions, SSO and app authorization
+  reject it. Ordered user-row locks coordinate revocation with login completion
+  and prevent administrators from concurrently disabling each other. Redis
+  cleanup failures retain disabled access; enabling requires successful cleanup
+  and never restores deleted sessions. Accounts and passkeys are preserved.
 
 ### database-broker
 
@@ -365,6 +372,13 @@ Keep changes scoped to the task and owning repository. For cross-component work,
 check HTTP paths, config names, secret names, database migrations, image tags, and
 Caddy labels together. Keep credentials and local environment files out of Git.
 Deployment and host changes affect a real server and require task authorization.
+
+For frontend work, pay particular attention to alignment. Visually check heading
+counters, badges, text baselines, icons and neighboring controls in both themes
+at mobile and desktop widths, including after HTMX swaps. Use explicit shared
+alignment and spacing; inspect inherited Pico margins and line heights. Passing
+overflow checks alone is insufficient: review close-up screenshots and verify
+that elements look aligned, as well as checking their bounding boxes.
 
 ## Signed gateway identity
 

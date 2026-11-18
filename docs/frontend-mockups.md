@@ -1,5 +1,238 @@
 # Frontend design mockups
 
+## Gateway user access proposal
+
+The [light Users preview](../access-gateway/docs/mockups/activity.html#users) and
+[dark preview](../access-gateway/docs/mockups/dark/activity.html#users) add a short
+Users description and separate **Name**, **UUID**, **Role**, and **Enabled**
+columns. Switching a user off opens a confirmation warning about deleting all
+gateway/app sessions and blocking further login attempts until re-enabled.
+Cancel/Escape keeps access enabled; the signed-in administrator is protected.
+Re-enabling permits a new sign-in without restoring deleted sessions.
+
+Review the [desktop panel](../access-gateway/docs/mockups/users-desktop.png),
+[dark mobile panel](../access-gateway/docs/mockups/dark/users-mobile.png), or
+[mobile warning](../access-gateway/docs/mockups/users-disable-mobile.png).
+The [gateway screen guide](../access-gateway/docs/mockups/README.md#user-access-proposal)
+records all twelve screenshots and the sample behavior. Authored HTMX receipts
+simulate changes locally; production implementation is described below.
+
+Brave/Chromium checked both themes at 320/390/768/1440 pixels, alignment,
+overflow, keyboard/focus, Cancel/Escape, disabling/re-enabling, session deletion
+and counts across filter/refresh swaps, theme links, and existing device editing.
+Member pages still omit administration controls. Two intentionally blocked
+requests passed state-retention/retry checks. All 324 HTTP requests were local
+GETs without submitted values; no unexpected browser/CSP or HTTP errors occurred.
+Twelve screenshots were visually reviewed; relative-reference and whitespace
+checks passed. No Go checks, live authentication, publication or deployment ran.
+
+The gateway now implements the reviewed panel in its embedded PicoCSS/HTMX UI.
+A PostgreSQL migration defaults existing accounts to enabled. The admin action
+locks actor/target rows in UUID order, coordinates with passkey/link completion,
+and revokes all gateway sessions followed by their app sessions and SSO grants.
+Disabled accounts are rejected by gateway, API, enrollment, SSO and forward-auth
+checks. Redis cleanup failures retain disabled access; enabling requires a
+successful sweep. Accounts, passkeys and unused links are retained. The UI
+preserves scope filters, unrelated device drafts and surviving app selections.
+
+Implementation verification passed `gofmt`, `go build ./...`, `go vet ./...`,
+`go test ./...` and `go test -race ./...` in the gateway with disposable loopback
+PostgreSQL/Redis. A targeted race check also covers in-flight one-time-link login.
+Tests cover administrator/self protection, concurrent admin changes, in-flight
+passkey login, real signed assertions, unavailable links,
+revocation across replicas, pending SSO grants, namespace isolation, cleanup
+failures and authoritative error rendering.
+
+Chromium exercised real handlers/backends across 16 administrator/member layouts
+in both themes at 320/390/768/1440 pixels, keyboard confirmation/Cancel/Escape,
+focus, error recovery, retained drafts/selections/filters, real session removal,
+and re-enabling. Ten deliberately injected 503 responses and one blocked network
+request retained usable controls and accurate account state. Twelve production
+screenshots were visually reviewed. A virtual CTAP2 authenticator completed
+real enrollment and its separate login, old-cookie rejection after disabling,
+and a fresh retained-passkey login after re-enabling; link login was rejected
+while disabled, succeeded after enabling and rejected replay. No unexpected page
+or CSP errors occurred. All 16 maintained passkey-flow browser scenarios passed.
+The temporary harness was removed. No physical authenticator, publication or
+deployment ran.
+
+## Gateway compact device actions
+
+The [member preview](../access-gateway/docs/mockups/activity-member.html) and
+[dark member preview](../access-gateway/docs/mockups/dark/activity-member.html)
+replace device **Manage** disclosures with pencil and trash icons. A pencil
+replaces the name with a PicoCSS grouped text field, × cancel and ✓ save, without
+increasing row height. Enter/Escape work, active devices stay protected, and an
+inactive backup key demonstrates confirmed removal. The administrator activity
+previews and all device-scope fragments use the same controls.
+
+Review the [dark rename screenshot](../access-gateway/docs/mockups/dark/devices-edit-desktop.png)
+or [mobile rename screenshot](../access-gateway/docs/mockups/devices-edit-mobile.png).
+The [gateway screen guide](../access-gateway/docs/mockups/README.md#compact-device-actions-proposal)
+records the interactions and remaining screenshots. These are browser-local
+sample changes with authored HTMX receipts; draft names are never transmitted.
+The static pages remain independent fixtures; production implementation is
+recorded below.
+
+Headless Brave/Chromium checked 16 admin/member layouts across both themes at
+320/390/768/1440 pixels, including inline control/row alignment, keyboard flows,
+long/escaped/invalid names, protected actions, confirmation/focus, removal counts,
+empty states, filters/refresh, independent session selections and theme links.
+One intentionally blocked rename request retained its draft and passed retry.
+No unexpected page/CSP errors, HTTP failures, external requests or submitted
+draft values occurred. Eighteen desktop/mobile screenshots were saved and
+visually reviewed. Relative references and Git whitespace checks passed.
+No Go checks, live authentication, publication or deployment ran.
+
+The gateway now implements these controls in its embedded production templates,
+PicoCSS and existing browser bridge. Real rename/removal forms retain their POST
+routes, fields, independent administrator scopes, ownership checks and live-session
+removal guards. Device errors target panel feedback so the inline draft survives;
+successful activity-group mutations preserve other open device editors. Native
+confirmation uses the same presentation and focus behavior as session removal.
+
+Implementation verification passed `gofmt`, `go build ./...`, `go vet ./...`,
+`go test ./...` and `go test -race ./... -skip '^TestDeviceUIBrowserHarness$'`
+inside the gateway with newly created loopback PostgreSQL/Redis containers.
+All 445 maintained tests passed; the temporary browser harness alone was excluded
+from the race suite and removed afterward. Regression coverage includes protected
+controls, escaped device names and error retargeting across validation,
+authorization, conflict and dependency failures.
+
+Chromium exercised real handlers across 16 administrator/member layouts in both
+themes at 320/390/768/1440 pixels. Checks covered grouped-control alignment,
+unchanged row height, Enter/Escape/cancel/focus, real renames reflected in session
+names, invalid/long/escaped names, retained drafts and retries, independent scopes,
+other activity mutations, confirmation and real removal/counts. Forged in-use
+removal and member cross-owner rename were rejected. Forty-eight deliberately
+injected or invalid mutation responses and one blocked network request retained
+usable controls/drafts. No unexpected page/CSP errors occurred. Twenty-four
+production screenshots were visually reviewed; mockup screenshots remain separate
+examples. Parent/component whitespace checks passed. No physical passkey workflow,
+production backend, publication or deployment was used.
+
+## Gateway device and session user filters
+
+The new [administrator preview](../access-gateway/docs/mockups/activity.html)
+and [dark preview](../access-gateway/docs/mockups/dark/activity.html) add a
+user icon and dropdown chevron to each activity list. Both default to the current
+administrator, **razzie (you)**; one user or **All users** can be chosen separately
+for Devices and Active sessions. Counts and empty states follow the selected
+scope, and scoped refresh keeps it. The [regular-user preview](../access-gateway/docs/mockups/activity-member.html)
+omits both filters and administration controls.
+
+Review the [desktop dropdown](../access-gateway/docs/mockups/activity-dropdown-desktop.png)
+or [dark mobile dropdown](../access-gateway/docs/mockups/dark/activity-dropdown-mobile.png).
+The [gateway screen guide](../access-gateway/docs/mockups/README.md#device-and-session-user-filters-proposal)
+describes the fixture behavior and screenshots. These are static PicoCSS/HTMX
+mockups. The reviewed filters are now implemented in the gateway; the static
+previews remain independent fixtures.
+
+Verification covered 16 admin/member layouts across both themes at
+320/390/768/1440 pixels and 80 primary scope switches, including counts, empty
+states, independent filters, retained selections, scoped refresh, keyboard/focus,
+theme navigation and existing sample mutations. All assets loaded and page
+widths/headings passed. No browser/CSP errors, HTTP failures or transmitted draft
+values occurred; all 526 page HTTP requests were local GETs. Twelve screenshots
+were visually reviewed; relative-reference and Git whitespace checks passed.
+No Go checks or live authentication ran for these static-only changes. Nothing
+was published or deployed.
+
+The control-alignment follow-up removes Refresh's inherited bottom margin and
+uses matching 38px control heights, line heights and 16px icons. Heading counters
+also use centered flex rows and explicit spacing. Parent AGENTS.md now records
+the requirement to inspect text, counter, badge, icon and control alignment
+visually as well as measuring bounds. Sixteen
+admin/member layouts passed in both themes at the same four widths, including
+centered heading counters, matching dropdown/Refresh top edges and icon centers,
+filtering, scoped refresh
+and keyboard Escape/focus. Twelve screenshots were refreshed and visually
+reviewed. Browser/CSP, response and whitespace checks passed; no Go checks ran
+for the static-only adjustment.
+
+Gateway implementation now uses server-rendered user dropdowns with account
+UUIDs or explicit `all` selections. Each list defaults to the current admin,
+filters independently, and retains both scopes through refresh, device/session
+mutations and user creation. Regular users receive only their own records even
+with forged filter parameters. Device-in-use checks inspect all live sessions,
+regardless of the displayed session scope. The reviewed control and counter
+alignment is included, with long account names wrapping in menus and truncating
+in closed controls. See [managing devices and sessions](../access-gateway/docs/reference.md#manage-devices-and-sessions).
+
+Implementation verification passed `go build ./...`, `go vet ./...`, and all
+443 tests in `go test ./...` with newly created loopback PostgreSQL and Redis.
+`go test -race ./... -skip '^TestActivityBrowserHarness$'` passed every maintained
+test; only the temporary fixture server was excluded while it ran separately,
+then removed before the final full test run. Regression coverage includes
+own/all/individual defaults, UUID/name ambiguity, invalid and empty scopes,
+escaping, regular-user isolation, demotion, protection across independent scopes,
+mutation retention and direct-load parameters.
+
+Chromium checked real gateway handlers with those backends across 16 admin/member
+layouts in light/dark at 320/390/768/1440 pixels. Keyboard disclosure, focus,
+independent scope changes, refresh, retained drafts/app selections, empty and
+maximum-length names, real rename/app/gateway deletion, user creation, direct
+loads, regular-user forgery and failure recovery passed. Eight intentionally
+injected 503 responses retained panels and scope; there were no unexpected
+browser/CSP errors or failed responses. Twelve production screenshots were
+visually reviewed, including controls, badges and headings. Parent/component
+whitespace checks passed. No physical passkey workflow, production backend,
+publication or deployment was used.
+
+## Gateway grouped sessions proposal
+
+The [light Sessions preview](../access-gateway/docs/mockups/sessions.html) and
+[dark counterpart](../access-gateway/docs/mockups/dark/sessions.html) show one
+row per gateway session with app sessions in an extra column. Checkbox chips
+allow individual or multiple app-session deletion while retaining the gateway
+login. A trash button confirms deletion of the gateway session and all its apps.
+Current-browser sessions remain protected. Refresh restores sample data.
+
+Review [light desktop](../access-gateway/docs/mockups/sessions-desktop.png),
+[dark desktop](../access-gateway/docs/mockups/dark/sessions-desktop.png), or
+[mobile](../access-gateway/docs/mockups/sessions-mobile.png). The
+[gateway screen guide](../access-gateway/docs/mockups/README.md#grouped-gateway-sessions-proposal)
+records the interactions and remaining screenshots. Authored HTMX fragments and
+mockup-only JavaScript simulate changes locally. Production implementation is
+described below.
+
+Brave/Chromium passed eight layout cases across both themes at 320/390/768/1440
+pixels, with keyboard selection, app/gateway deletion, empty apps, confirmation,
+Cancel/Escape, focus return, protection, counters, reset and theme navigation.
+No page overflow, page/console/CSP errors, HTTP failures, external HTTP requests
+or transmitted values occurred. Ten screenshots were visually reviewed; relative
+references and whitespace checks passed. No service Go checks, live
+authentication, publication or deployment ran for this static mockup.
+
+Gateway production now groups sessions in its existing activity panel, with
+real app hostnames, independently selectable app records, gateway trash actions
+and native confirmation dialogs. The server validates every app in a selection
+against the parent gateway login and caller before one Redis deletion. Existing
+ownership/admin rules, current-browser protection and gateway-wide revocation
+remain enforced. Errors preserve the table and selected apps; manual panel
+refresh preserves other panels' drafts. The session count reflects gateway
+logins. See [session management](../access-gateway/docs/reference.md#manage-devices-and-sessions).
+
+Implementation checks passed `go build ./...`, `go vet ./...`, `go test ./...`
+and `go test -race ./...` in the gateway, with disposable loopback PostgreSQL
+and Redis and a writable temporary Go cache. All 434 tests passed, including
+integration tests for invalid/foreign/current selections, atomic app batches,
+parent survival, cross-replica revocation and preserved device-removal guards.
+Parent/component whitespace checks passed.
+
+Brave/Chromium exercised real production handlers with those backends in both
+themes at 320/390/768/1440 pixels. All eight cases covered grouping, duplicate
+app origins, keyboard selection, app batch deletion, empty apps, gateway
+confirmation, rapid Cancel/Escape/reopen, focus restoration, current-browser
+protection, scoped refresh, member/long-identity views and sign-out. Injected
+deletion failures retained selections and controls; only the expected 503
+responses occurred. Requests contained selected hashes and the parent hash;
+no unexpected network/page/console/CSP errors or page overflow occurred.
+Representative desktop/mobile screenshots were visually reviewed and the
+temporary browser harness was removed. All 16 maintained passkey-flow browser
+scenarios passed with simulated authenticator/API responses. No physical passkey,
+publication or deployment acceptance ran.
+
 ## Files and Notes connection terminology
 
 Both services call saved S3 provider settings **connections**, following the
