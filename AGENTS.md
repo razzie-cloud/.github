@@ -190,14 +190,23 @@ source remain authoritative for service-specific details.
 ### landing
 
 - Independent `github.com/razzie-cloud/landing` Go module and homepage image.
-  Read `landing/AGENTS.md`. A standard-library Go HTTP service embeds its assets
-  and pre-renders HTML in memory at startup. It listens on SERVICE_PORT (8080),
-  serves only the public page/assets, and exposes GET/HEAD /healthz and /readyz.
-- `DOMAIN`, `SCHEME` and optional `PUBLIC_PORT` drive metadata and links. Sign in
-  always links to `auth.<DOMAIN>`. Optional `APPS_CONFIG_FILE` JSON lists cards
+  Read `landing/AGENTS.md`. A Go HTTP service embeds its assets
+  and pre-renders public HTML in memory at startup. PAGE_MODE=home serves the
+  authenticated home.<DOMAIN> with mandatory signed gateway identity, personal
+  welcomes and device/session links. Keep its independent PASETO verifier/tests
+  synchronized with Files/Notes; personal responses are no-store. It listens on
+  SERVICE_PORT (8080), serves only the page/assets for its mode, and exposes
+  GET/HEAD /healthz and /readyz.
+- `DOMAIN`, `SCHEME` and optional `PUBLIC_PORT` drive metadata and links. Public Sign in
+  links to `home.<DOMAIN>` through existing gateway SSO; Home links to gateway
+  account management. Gateway HOME_ORIGIN sends direct sign-ins Home while app
+  SSO preserves its destination.
+  Optional `APPS_CONFIG_FILE` JSON lists cards
   and navigation entries with bundled SVG presets; Files/Notes are examples.
 - Gateway, Files and Notes use `LANDING_ORIGIN` / `--landing-origin` for their
   shared cloud-home link; the separate service-name link opens the app.
+  Gateway sets LANDING_ORIGIN to the public landing and uses HOME_ORIGIN for
+  signed-in logo links; account-state swaps restore the public link on sign-out.
 - Run build/vet/race tests in `landing/`. Images and commits must be published
   before deploying parent pins or selecting image tags.
 
@@ -257,7 +266,7 @@ source remain authoritative for service-specific details.
   to `.env` and set separate local `POSTGRES_PASSWORD` and `VALKEY_PASSWORD`
   values before starting. Caddy publishes a single loopback HTTP port, `8080`,
   and routes by hostname: public homepage `http://localhost:8080`, gateway
-  `http://auth.localhost:8080`, whoami `http://whoami.localhost:8080`, Files
+  `http://auth.localhost:8080`, signed-in Home `http://home.localhost:8080`, whoami `http://whoami.localhost:8080`, Files
   `http://files.localhost:8080`, Notes `http://notes.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
   `LOCAL_PORT` overrides the shared port. Compose builds `landing/` with
   runtime domain/port settings and an optional app-list JSON mount; rebuild only after source or asset changes.
@@ -384,7 +393,7 @@ that elements look aligned, as well as checking their bounding boxes.
 
 Authenticated service headers follow the [shared account-header contract](docs/brand/README.md#signed-in-account-header):
 shield, username linked to the public gateway and an inline Administrator badge
-only for admins, also on mobile. Keep the three local `account-header.css` copies
+only for admins, also on mobile. Keep the four local `account-header.css` copies
 identical and use this pattern in future apps. Gateway owns sidebar sign-out;
 public/anonymous shells omit account identity. Never use the private gateway
 discovery URL as a browser destination or unsigned role headers for the badge.

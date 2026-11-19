@@ -77,6 +77,9 @@ scope and admin APIs remain backend-enforced; do not broaden attachment URLs.
 
 Inspect `landing/main.go`, `main_test.go`, `index.html`, `landing.css` and
 `apps.example.json`. Verify no-app and configured-card/navigation states,
-light/dark preference, narrow layouts and long labels. Sign in always targets
-`auth.<DOMAIN>`; public scheme/port and links come from validated runtime settings.
+light/dark preference, narrow layouts and long labels. Public Sign in targets
+`home.<DOMAIN>` through gateway forward-auth; existing sessions reach Home without
+another passkey prompt, while signed-out visitors sign in and return Home. Home's
+account/device links still target the gateway. Public scheme/port and links come
+from validated runtime settings.
 Never expose configuration/source through an asset route.

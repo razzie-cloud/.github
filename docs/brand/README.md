@@ -40,7 +40,7 @@ rather than as another name for a connection.
 
 ## Signed-in account header
 
-Access Gateway, Files, Notes and future authenticated Razzie Cloud services use
+Access Gateway, Files, Notes, authenticated Home and future authenticated Razzie Cloud services use
 the same upper-right account control: the existing 20px shield/check line icon,
 the bold username linking to Access Gateway's public account page, then a green
 **Administrator** badge on the same line only for administrators. Regular users
@@ -48,7 +48,7 @@ have no role badge. Keep the shield and username visible on mobile; truncate
 long usernames within the available space rather than widening the page.
 Use the shared spacing, sizes, colors and focus treatment from
 [`account-header.css`](../../access-gateway/internal/web/static/account-header.css).
-The Files/Notes copies must remain identical. Use the existing local SVG, PicoCSS
+The Files/Notes/Landing copies must remain identical. Use the existing local SVG, PicoCSS
 and escaped Go templates; keep each independently deployable service's assets local.
 
 The identity markup is `.identity` containing the shield and `.identity-copy`;

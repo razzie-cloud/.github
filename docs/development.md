@@ -28,8 +28,13 @@ The public homepage is at <http://localhost:8080>. Compose builds the independen
 `landing/` submodule. Its optional `LANDING_APPS_FILE` JSON mount defaults to the
 Files/Notes example. Domain, scheme and `LOCAL_PORT` are rendered at container
 startup. Recreate containers after port or config changes; rebuild the landing
-image only after source or asset changes. Services receive `LANDING_ORIGIN` so
-their cloud logo returns here while the service name opens the app.
+image only after source or asset changes. A second landing instance serves
+<http://home.localhost:8080> with `PAGE_MODE=home` and mandatory signed identity.
+Every Home path uses forward auth. Gateway `HOME_ORIGIN` sends direct sign-ins
+there; app SSO retains its requested destination. Files and Notes receive Home as
+`LANDING_ORIGIN`. Gateway receives the public landing origin and uses HOME_ORIGIN
+for its signed-in logo; sign-out switches it back to the public landing page.
+The service name opens the app. Home links to gateway device/session management.
 
 Find the `bootstrap.token_created` event and its `bootstrap_token` field in the
 gateway logs. Open <http://auth.localhost:8080>, create the first administrator

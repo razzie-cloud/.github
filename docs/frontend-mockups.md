@@ -1,5 +1,80 @@
 # Frontend design mockups
 
+## Files shares overview
+
+The [Shares preview](../files/docs/mockups/shares.html) and
+[dark preview](../files/docs/mockups/dark/shares.html) collect links from all
+directories. Every authenticated Files preview includes the sidebar entry.
+Cards show the source directory, path, access and Active/Expired status.
+[Empty](../files/docs/mockups/shares-empty.html) and
+[creation](../files/docs/mockups/share-create.html) screens cover discovery and
+new links. Revocation is simulated in previews; production implements the
+owner-scoped `/shares` route and returns there after real revocation.
+See the [screen guide](../files/docs/mockups/README.md#shares-overview).
+
+Verification passed Files build, vet, tests and race tests. Maintained browser
+fixtures checked the production overview, creation/empty states, real revocation,
+HTMX navigation, direct links and fresh Back/Forward restoration in both themes
+at 320/390/768/1440 pixels. Mockup checks covered 112 layouts and 1008 local GETs,
+with no unexpected browser/CSP errors or failed responses; primary sidebar and
+sharing screenshots were refreshed and representative screenshots visually
+reviewed. Local-reference and whitespace checks passed. PostgreSQL integration
+skipped with `TEST_DATABASE_URL` unset; in-memory S3 tests ran. No live
+S3/authentication, publication or deployment was performed.
+
+## Shared Files recipient layout proposal
+
+The [single-file preview](../files/docs/mockups/public-file.html) and
+[dark preview](../files/docs/mockups/dark/public-file.html) replace the one-row
+table with a compact file card, one filename, format/size and labeled Preview
+and Download actions. **Read-only** appears once beside **Shared with you**;
+the header, caption and footer no longer repeat it. The matching
+[folder preview](../files/docs/mockups/public.html) keeps its file table and
+adds useful item counts. Public pages omit account and management controls.
+
+Filename and folder links use neutral table text in both themes. The color
+follow-up checked eight layouts at 320/390/768/1440 pixels, including focused
+links and HTMX-loaded names, and refreshed the four folder screenshots.
+
+Review the [dark proposal screenshot](../files/docs/mockups/dark/public-file-proposal.png)
+and [mobile screenshot](../files/docs/mockups/dark/public-file-mobile.png).
+The [screen guide](../files/docs/mockups/README.md#shared-recipient-layout-proposal)
+links both themes and describes the sample folder, empty-folder, preview and
+simulated download interactions. Production now implements the reviewed layout;
+the static previews remain independent fixtures.
+
+Headless Brave/Chromium checked all four full pages in light/dark at
+320/390/768/1440 pixels: headings, one access label, images, overflow,
+folder/breadcrumb/theme/deep-link navigation, empty state, preview closing,
+Escape, keyboard/focus return, download receipts and control/icon alignment.
+Twelve screenshots were visually reviewed. Local-reference and whitespace
+checks passed, with no unexpected browser/CSP/console errors or failed
+responses; page traffic consisted of local GETs. Temporary preview processes
+were stopped. No Go service checks, live S3/authentication, publication or
+deployment ran for this static mockup.
+
+The Files implementation uses one access indicator, a single-file card with
+format/size and labeled actions, and a compact recipient table with neutral
+filename links. Folder counts describe the current listing page when paginated.
+Existing capability URLs, password gates, safe previews, Cast controls,
+HTMX navigation and download behavior are preserved. The styles load only on
+public pages; account headers and management layouts retain their existing rules.
+
+Implementation checks passed `go build ./...`, `go vet ./...`, `go test ./...`
+and `go test -race ./...` in Files. PostgreSQL integration skipped because
+`TEST_DATABASE_URL` was unset; in-memory S3 fixture tests ran. Headless
+Brave/Chromium exercised real handlers with in-memory share/storage fixtures
+across 64 light/dark layouts at 320/390/768/1440 pixels: single files, folders,
+empty folders, pagination, unsupported formats, MP4 controls, long filenames and
+password screens. Checks covered neutral links after HTMX swaps, single access
+labels, assets, overflow, alignment, previews/close/Escape/focus and media cleanup.
+Sixteen production screenshots were visually reviewed; there were no unexpected
+CSP/console/page errors or failed responses. The maintained panel-navigation
+browser regression also passed, covering management/public navigation, history,
+dialogs and safe errors. Temporary browser fixtures were removed. No live S3,
+PostgreSQL, Cast receiver, publication or deployment acceptance ran.
+
+
 ## Gateway user access proposal
 
 The [light Users preview](../access-gateway/docs/mockups/activity.html#users) and

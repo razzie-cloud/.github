@@ -12,7 +12,7 @@ use and tracks their independent repositories as Git submodules.
 | [database-broker](database-broker/README.md) | Creates per-service PostgreSQL and Valkey databases and returns their connection URIs |
 | [files](files/README.md) | Browse, upload, and share S3 files, with optional rclone encryption |
 | [notes](notes/README.md) | Markdown notes with user-managed S3 connections, optional rclone encryption, and search |
-| [landing](landing/README.md) | Public homepage with configurable domain, app cards, and bundled icon presets |
+| [landing](landing/README.md) | Public landing page and authenticated Home with personal welcome and app links |
 | [infra](infra/README.md) | Deploys the platform with Docker Swarm and Caddy; includes optional NixOS host configuration |
 
 Caddy checks app access with the gateway. Services ask the broker for a database
@@ -52,6 +52,7 @@ then sign in. The token is logged only once when generated.
 | Local URL | Use |
 | --- | --- |
 | <http://localhost:8080> | Homepage: project links, configurable apps, and sign-in |
+| <http://home.localhost:8080> | Signed-in Home: personal welcome, apps, and account-management links |
 | <http://auth.localhost:8080> | Gateway: sign in, add users, and enroll devices |
 | <http://whoami.localhost:8080> | Whoami: see the identity passed to a protected app |
 | <http://files.localhost:8080> | Files: connect your S3 storage and add a directory |
@@ -88,3 +89,8 @@ Notes is available at `http://notes.localhost:8080` in local Compose and
 `S3_DEV_PASSWORD` set, then add connections and optionally encrypted notebooks in
 Notes’ Storage page, just as in Files. See the
 [Notes service guide](notes/README.md) for conditional saves, search, and recovery.
+
+Signed-in Home is served at `home.razzie.cloud` (`home.localhost:8080` locally).
+Direct sign-in redirects there; device and session management remains in Access
+Gateway. App-initiated sign-in returns to the requested app. Both Home and the
+public apex use the landing image and configured app list.

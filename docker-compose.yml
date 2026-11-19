@@ -16,6 +16,26 @@ services:
     networks:
       - web
 
+  home:
+    image: ghcr.io/razzie-cloud/landing:local
+    pull_policy: build
+    build:
+      context: ./landing
+    environment:
+      DOMAIN: localhost
+      SCHEME: http
+      PUBLIC_PORT: ${LOCAL_PORT:-8080}
+      PAGE_MODE: home
+      ACCESS_GATEWAY_URL: http://access-gateway:8080
+      APPS_CONFIG_FILE: /etc/landing/apps.json
+    volumes:
+      - ${LANDING_APPS_FILE:-./landing/apps.example.json}:/etc/landing/apps.json:ro
+    networks:
+      - web
+    depends_on:
+      access-gateway:
+        condition: service_healthy
+
   postgres:
     image: postgres:17-alpine
     environment:
@@ -99,11 +119,12 @@ services:
       REDIS_URI_FROM: http://database-broker:8080/v1/instances/valkey/access_gateway/uri?client=access_gateway
       ORIGIN: http://auth.localhost:${LOCAL_PORT:-8080}
       LANDING_ORIGIN: http://localhost:${LOCAL_PORT:-8080}
+      HOME_ORIGIN: http://home.localhost:${LOCAL_PORT:-8080}
       RP_ID: auth.localhost
       RP_NAME: Razzie Cloud local
       # Gateway ports are private; Caddy reaches it over Docker networks.
       TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
-      FORWARD_AUTH_ORIGINS: http://whoami.localhost:${LOCAL_PORT:-8080},http://files.localhost:${LOCAL_PORT:-8080},http://logs.localhost:${LOCAL_PORT:-8080},http://notes.localhost:${LOCAL_PORT:-8080}
+      FORWARD_AUTH_ORIGINS: http://home.localhost:${LOCAL_PORT:-8080},http://whoami.localhost:${LOCAL_PORT:-8080},http://files.localhost:${LOCAL_PORT:-8080},http://logs.localhost:${LOCAL_PORT:-8080},http://notes.localhost:${LOCAL_PORT:-8080}
     networks:
       - backend
       - web
@@ -141,7 +162,7 @@ services:
       ACCESS_GATEWAY_URL: http://access-gateway:8080
       POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/files/uri?client=files
       ORIGIN: http://files.localhost:${LOCAL_PORT:-8080}
-      LANDING_ORIGIN: http://localhost:${LOCAL_PORT:-8080}
+      LANDING_ORIGIN: http://home.localhost:${LOCAL_PORT:-8080}
       SHARE_ORIGIN: http://shared-files.localhost:${LOCAL_PORT:-8080}
       MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-10737418240}
       CAST_SHARE_TTL: ${CAST_SHARE_TTL:-6h}
@@ -168,7 +189,7 @@ services:
       ACCESS_GATEWAY_URL: http://access-gateway:8080
       POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/notes/uri?client=notes
       ORIGIN: http://notes.localhost:${LOCAL_PORT:-8080}
-      LANDING_ORIGIN: http://localhost:${LOCAL_PORT:-8080}
+      LANDING_ORIGIN: http://home.localhost:${LOCAL_PORT:-8080}
       # Users configure their own connections in Notes. This operator exception
       # permits only the optional local S3 fixture, as in Files.
       S3_ALLOWED_PRIVATE_ENDPOINTS: s3-demo:9000
@@ -207,6 +228,8 @@ services:
     depends_on:
       landing:
         condition: service_healthy
+      home:
+        condition: service_started
       access-gateway:
         #condition: service_healthy
         condition: service_started
