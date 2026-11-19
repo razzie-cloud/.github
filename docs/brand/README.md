@@ -5,22 +5,36 @@ documentation, and passkey relying-party display names.
 
 ![Razzie Cloud logo](razzie-cloud-logo.png)
 
-`razzie-cloud-logo.png` is the user-maintained source of truth. The current mark
+`razzie-cloud-logo.png` is the user-maintained full-size artwork.
+`razzie-cloud-logo-small.png` is the supplied 256×196 image used for service
+header logos. `razzie-cloud-logo-favicon.png` is the separate square 256×256 image
+used only for favicons. Landing's large central artwork uses the full-size
+`razzie-cloud-logo.png`. The current mark
 combines the smiling gold cloud with navy detailing and an integrated R.
 Preserve the supplied image and its aspect ratio when displaying it.
 
-Exact copies are kept at these paths in the parent checkout:
+Exact copies of `razzie-cloud-logo-small.png` are kept at these paths in the parent checkout
+(Gateway, Files and Notes retain the local filename `razzie-cloud-logo.png`):
 
 - `access-gateway/internal/web/static/razzie-cloud-logo.png`
 - `files/internal/web/static/razzie-cloud-logo.png`
 - `notes/docs/mockups/assets/razzie-cloud-logo.png` (static mockups)
 - `notes/internal/web/static/razzie-cloud-logo.png`
-- `landing/assets/razzie-cloud-logo.png`
+- `landing/assets/razzie-cloud-logo-small.png`
+
+Landing also keeps an exact copy of the full-size artwork at
+`landing/assets/razzie-cloud-logo.png` for its central logo and social preview.
+Each directory listed above also keeps an exact copy of
+`razzie-cloud-logo-favicon.png`; all production and mockup favicon links use it.
+Existing logo boxes use `object-fit: contain` to preserve the artwork's aspect
+ratio and the header's alignment.
+Header logos and Landing's central artwork render at 80% scale within their
+existing layout boxes, compensating for the supplied artwork's tighter crop.
 
 The service headers, favicons, and HTML mockups use the service-local assets;
 the landing page and Notes mockups use their own asset copies. Root and profile
-documentation reference the master directly. Refresh all active copies and saved
-preview screenshots when the master changes.
+documentation reference the full-size artwork directly. Refresh the corresponding
+active copies and saved preview screenshots when a supplied image changes.
 
 Mockup buttons use navy; warm gold distinguishes the active navigation item.
 Green badges continue to represent statuses such as writable access.
@@ -75,14 +89,23 @@ sign-out and account-state updates; full pages have only one header target.
 
 The current logo refresh passed:
 
-- SHA-256 comparison of all three active copies against the master; the old backup
-  remains unchanged.
-- Browser checks of 24 service mockup pages and four landing-page theme/viewport
-  combinations, verifying the new image loads and retains its aspect ratio.
-- Refresh of all 20 saved mockup and landing-page screenshots, with no browser errors.
-- `go build ./...`, `go vet ./...`, and `go test ./...` in both service modules,
-  plus `go test -race ./...` in Files.
-- Removal of the obsolete prompt and its references, and Git whitespace checks.
+- Byte comparison of all five small-image copies against
+  `razzie-cloud-logo-small.png`, all five favicon copies against
+  `razzie-cloud-logo-favicon.png`, and Landing's large copy against the full-size
+  `razzie-cloud-logo.png`. All 72 relative mockup favicon links resolve.
+- Chromium checks of rendered Gateway, Files, Notes, public Landing and Home
+  templates in light/dark at 320, 390, 768 and 1440 pixels (40 cases). Header
+  logos loaded at 256×196, separate favicons at 256×256 and Landing's central
+  artwork at 1200×850, with no stretching, horizontal overflow or browser errors.
+  Representative temporary screenshots were visually inspected.
+- The 80% scale passed those 40 production layouts, including image replacement,
+  plus 12 light/dark mobile/desktop mockup layouts. Existing layout boxes and
+  Landing's artwork rotation are preserved.
+- `go build ./...` and `go vet ./...` in all four UI modules, `go test ./...`
+  in Gateway/Files/Notes, and `go test -race ./...` in all four.
+- Git whitespace checks in the parent and all submodules.
 
-Go used a temporary writable build cache. PostgreSQL/Redis integration variables
-were unset, so those integration tests skipped. Nothing was deployed.
+Checks ran outside the sandbox to allow the Go cache and local fixture sockets.
+Browser checks used temporary production-template fixtures, without live SSO or
+storage. Historical mockup screenshots were not regenerated. Docker builds were
+not run because daemon access was unavailable. Nothing was deployed.
