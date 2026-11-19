@@ -191,9 +191,12 @@ source remain authoritative for service-specific details.
 
 - Independent `github.com/razzie-cloud/landing` Go module and homepage image.
   Read `landing/AGENTS.md`. A Go HTTP service embeds its assets
-  and pre-renders public HTML in memory at startup. PAGE_MODE=home serves the
-  authenticated home.<DOMAIN> with mandatory signed gateway identity, personal
-  welcomes and device/session links. Keep its independent PASETO verifier/tests
+  and pre-renders public HTML in memory at startup. PAGE_MODE=both serves the
+  public apex and authenticated home.<DOMAIN> by original Host on one listener,
+  rejecting other hosts except for private probes, without URI rewriting.
+  Standalone public (default) and home modes remain available. Home requires
+  signed gateway identity and renders personal welcomes and device/session
+  links. Keep its independent PASETO verifier/tests
   synchronized with Files/Notes; personal responses are no-store. It listens on
   SERVICE_PORT (8080), serves only the page/assets for its mode, and exposes
   GET/HEAD /healthz and /readyz.
