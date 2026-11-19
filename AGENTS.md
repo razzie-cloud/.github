@@ -176,6 +176,11 @@ source remain authoritative for service-specific details.
   checks, owner/notebook query scoping and current read-only policy checks.
   Storage checks share the caller's object/page transaction to avoid nested
   pool acquisition. Removing mappings retains S3 objects and crypt recovery.
+- Compatibility-mode write locks and revisions use the connection UUID, bucket
+  and physical S3 key, coordinating shared notebooks on that connection. Independent
+  connections and external writers remain outside this protection. The physical
+  revision migration requires stopping all Notes HTTP processes and River workers
+  and reloading compatibility-mode editors; see `notes/docs/architecture.md`.
 - River queues maintenance and indexing coordinate per-notebook scan/index work
   across replicas. Durable cursors, advisory locks and current S3 revalidation
   protect retries/duplicates. Only complete listings permit sweep; authoritative
