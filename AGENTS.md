@@ -182,7 +182,8 @@ source remain authoritative for service-specific details.
   absence checks remove derived rows. Search uses PostgreSQL simple vectors.
 - Embedded PicoCSS/HTMX includes storage setup, notebook selection and explicit
   saves with preserved conflict drafts. Compose/Swarm keep every path behind SSO;
-  /v1/admin/* also requires the gateway admin policy and trusted marker.
+  /v1/admin/* requires the same verified signed admin role as shared connections;
+  every Notes path uses ordinary /forward_auth, as Files does.
 - Run build/vet/tests/race inside notes/. PostgreSQL integration uses disposable
   loopback TEST_DATABASE_URL and random schemas; S3 fixtures start automatically.
   Tests include independent rclone filesystem compatibility and encrypted rebuild.
@@ -409,8 +410,13 @@ Files/Notes enable verification with ACCESS_GATEWAY_URL / --access-gateway-url;
 both stacks set the private gateway origin. Fetch on startup and refresh on
 expired/unknown-key use; never trust expired cached keys during an outage.
 Verify issuer, public app ORIGIN audience, one-minute lifetime, exact method/URI,
-and matching UUID/name. Notes admin routes require signed admin=true plus the
-existing proxy marker. Empty URL retains legacy proxy mode. Strip/copy the token
+and matching UUID/name. All app-owned admin actions, including Notes maintenance
+APIs and Files/Notes shared connections, require `gatewayidentity.IsAdmin` and
+propagate that verified role through `store.WithAdmin`. Empty URL retains legacy
+proxy mode for ordinary access but never grants admin rights. Use /forward_auth
+for every Files/Notes management path; do not rely on X-Notes-Admin or unsigned role headers.
+Reserve /forward_auth/admin for proxy-authorized apps such as Dozzle that do not
+verify gateway claims themselves. Strip/copy the token
 with other identity headers, exclude public shares/health, and never echo tokens.
 Keep the independent Files/Notes verifier copies and tests synchronized. The
 full protocol is in access-gateway/docs/reference.md#signed-proxy-identity.

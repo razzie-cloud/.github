@@ -164,8 +164,9 @@ sharing Files records. Back up these durable settings and crypt recovery passwor
 its content index and River scan progress can be rebuilt from S3.
 
 Saves use underlying S3 ETags, including encrypted notes, and retain conflicting
-drafts. Admin rebuild/status paths use /forward_auth/admin; normal storage and
-content management use /forward_auth and owner-scoped lookups. See
+drafts. Every Notes path uses /forward_auth. Notes authorizes rebuild/status and
+shared-connection management internally from the verified signed admin role,
+following Files; notebook lookups remain owner-scoped. See
 [Notes configuration and recovery](../notes/README.md).
 
 ### Local stack internals and cleanup
@@ -290,8 +291,9 @@ Files and Notes in this stack set `ACCESS_GATEWAY_URL=http://access-gateway:8080
 They fetch `/.well-known/paseto-keys` at startup and refresh expired public-key
 sets on use. Caddy strips incoming `X-Auth-Request-Token` and copies the gateway's
 PASETO beside UUID/name. Assertions bind the app origin, method, URI and identity;
-both apps use the signed current admin role for shared-connection controls.
-Notes admin APIs additionally require the existing trusted proxy marker. Public
+both apps use the signed current admin role for all app-owned admin actions,
+including shared-connection controls and Notes maintenance APIs. Legacy proxy
+mode never grants admin rights; unsigned role markers grant no authority. Public
 shares and private health probes keep their existing access rules. Keys rotate daily in shared
 Redis/Valkey with overlapping public keys. Discovery outages cannot extend trust
 past cached expiry. Upgrade/publish the gateway before enabling verification in

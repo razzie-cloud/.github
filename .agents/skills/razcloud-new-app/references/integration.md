@@ -32,9 +32,14 @@ access-gateway/docs/reference.md#signed-proxy-identity for the contract. Add its
 exact origin to the gateway allowlist in both stacks. Align `ORIGIN`, gateway
 origins, `LANDING_ORIGIN`, scheme and port with external browser URLs.
 
-Admin routes use `/forward_auth/admin`. Strip/reissue any trusted app marker
-only after authorization; the app must also require signed admin=true. Notes' `/v1/admin/*` shows mixed-policy ordering;
-Dozzle shows whole-host admin policy. A general route must not shadow admin routes.
+First-party apps authorize all admin actions internally through the verified
+signed `admin=true` role, following Files and Notes: `gatewayidentity.IsAdmin`
+feeds `store.WithAdmin`, and handler/store checks enforce it before privileged
+work. Legacy trusted-proxy mode never grants admin rights. Use ordinary
+`/forward_auth` on every app path, including admin APIs and callbacks; do not add
+unsigned proxy role markers or a separate path-based admin policy. Preserve
+owner scoping even for admins. Reserve `/forward_auth/admin` for services such as
+Dozzle that rely on proxy authorization and do not verify gateway claims themselves.
 
 Public apps need no SSO unless the product calls for it. Public capabilities
 need explicit scope: Files uses a separate host, only `/s/*` / `/static/*`,

@@ -46,8 +46,10 @@ origins belong in gateway `FORWARD_AUTH_ORIGINS`.
 - Ordinary apps use `/forward_auth`. Dozzle uses `/forward_auth/admin` everywhere;
   also strip incoming `Remote-*`. Preserve UUID/name header mappings, private
   HTTP port and disabled actions/shell.
-- Notes strips `X-Notes-Admin`, admin-authorizes `/v1/admin/*` and only then sets
-  the marker. Other paths use ordinary auth; ordering must preserve this split.
+- Files and Notes use ordinary `/forward_auth` on every management path. All
+  app-owned admin actions, including Notes `/v1/admin/*`, require the verified
+  signed role through `gatewayidentity.IsAdmin`/`store.WithAdmin` internally.
+  Legacy proxy mode never grants admin rights; do not add proxy role markers.
 - `shared-files.localhost` strips identity, permits `/s/*` and `/static/*` only
   and returns 404 elsewhere. It stays outside the gateway origin allowlist.
 - Whoami removes upstream cookies from its header echo; identity verification

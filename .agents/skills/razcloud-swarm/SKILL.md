@@ -45,10 +45,12 @@ considerations. `LANDING_ORIGIN` links apps home; sign-in targets `auth.<DOMAIN>
   to fetch public keys at startup and require PASETO verification. Publish a
   gateway supporting /.well-known/paseto-keys before enabling consumers; startup
   errors restart under Swarm policy, and expired keys never permit fallback.
-  Keep public ORIGIN as the audience; signed admin=true supplements app markers.
-  Callbacks stay
-  protected. Notes admin paths and all Dozzle paths use `/forward_auth/admin`;
-  trusted markers are stripped/reissued after auth. Files' separate public share
+  Keep public ORIGIN as the audience. All Files/Notes app-owned admin actions
+  require signed admin=true internally through `gatewayidentity.IsAdmin` and
+  `store.WithAdmin`; legacy proxy mode never grants admin rights. Every management
+  path/callback uses ordinary `/forward_auth`, including Notes `/v1/admin/*`;
+  do not add proxy role markers. Dozzle uses `/forward_auth/admin` on every path
+  because it does not verify gateway claims itself. Files' separate public share
   host allows only `/s/*` / `/static/*`, strips identity and returns 404 elsewhere.
   That host stays outside the app-origin allowlist.
 - Swarm ignores `depends_on`. Retain bounded discovery, restart policies and
