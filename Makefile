@@ -1,15 +1,15 @@
 .DEFAULT_GOAL := help
 INFRA_ENV_FILE ?= $(CURDIR)/infra/.env
 
-.PHONY: help latest-tags config deploy deploy-latest broker-pki
+.PHONY: help latest-tags config deploy deploy-latest broker-pki postgres-upgrade
 
 help:
-	@printf '%s\n' 'make latest-tags    Fetch stable service release tags and update infra/.env' 'make broker-pki     Prepare an internal broker CA and TLS secret' 'make config         Validate and render the Swarm stack' 'make deploy         Deploy with the selected tags' 'make deploy-latest  Select the latest tags and deploy'
+	@printf '%s\n' 'make latest-tags    Fetch stable service release tags and update infra/.env' 'make broker-pki     Prepare an internal broker CA and TLS secret' 'make postgres-upgrade  Back up and upgrade PostgreSQL with Caddy offline' 'make config         Validate and render the Swarm stack' 'make deploy         Deploy with the selected tags' 'make deploy-latest  Select the latest tags and deploy'
 
 latest-tags:
 	bash scripts/update-image-tags.sh "$(INFRA_ENV_FILE)"
 
-config deploy broker-pki:
+config deploy broker-pki postgres-upgrade:
 	$(MAKE) -C infra ENV_FILE="$(abspath $(INFRA_ENV_FILE))" $@
 
 deploy-latest: latest-tags

@@ -383,6 +383,12 @@ on them, and update this guide when they change.
   `make deploy-latest` combines tag selection and deployment; do not run it as
   validation. Releases need no parent or infra version-only commits. See
   `infra/README.md` and `infra/AGENTS.md` for deployment invariants.
+- Root `make postgres-upgrade` delegates to infra using `INFRA_ENV_FILE`. It is
+  explicit maintenance: Caddy/PostgreSQL downtime, a verified local cold volume
+  archive and an in-place major upgrade, followed by a PostgreSQL-only service
+  update. Keep the selected POSTGRES_IMAGE_TAG and POSTGRES_VOLUME_TARGET in
+  the operator environment for future deployments. Read the recovery procedure
+  in `infra/docs/operations.md`; never run this target as validation.
 
 ## Change discipline
 
