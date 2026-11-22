@@ -4,6 +4,20 @@ See the [README](../README.md) for the platform overview and first run.
 
 ## Development
 
+Run `make status` from the parent root to show each initialized subrepo's branch
+(or detached HEAD), staged/unstaged/untracked files, and unpushed commits relative
+to its upstream. Without an upstream, it lists commits absent from all local
+remote-tracking refs. The command uses local refs only; fetch the subrepos first
+if you need current remote state. Uninitialized submodules are skipped.
+
+Run `make push` to show that status and each push destination, then confirm once
+with `y` or `Y` to push every initialized subrepo's current branch and all local
+tags to its configured upstream remote. Any other answer (or no input) cancels.
+Every subrepo must have a branch with an upstream before any pushes begin.
+Uncommitted files are left as they are; the parent repository and other local
+branches are not pushed. Pushes stop on the first failure; earlier successful
+pushes remain published. Tag pushes may trigger release workflows.
+
 ### Run the complete local stack
 
 Run the commands in this guide from the parent repository root.
