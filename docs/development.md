@@ -216,6 +216,14 @@ docker compose config --quiet
 
 ### Run service checks
 
+First-party Dockerfiles use Distroless static runtime images, including the S3
+demo. Their build stages retain the Go toolchain. The production binaries accept
+`healthcheck` to probe local `/readyz` without a shell or external HTTP client,
+using `SERVICE_PORT` (default `8080`). For a TLS-enabled broker, the probe uses
+its loopback `HEALTH_PORT` (default `8081`). Probes return exit code 0 only for
+HTTP 200 and time out after two seconds. Existing runtime user IDs are preserved
+so mounted broker secrets keep their access permissions.
+
 All five Go modules, including the landing service, declare Go 1.27. Run Go
 commands from the individual service directory; this parent has no Go module or workspace.
 

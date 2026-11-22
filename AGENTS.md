@@ -327,7 +327,11 @@ on them, and update this guide when they change.
   (no backends means not ready); files checks PostgreSQL, not user S3 endpoints.
   Successful probes are quiet; background checks log dependency failure and
   recovery transitions with fixed dependency names, without backend errors.
-  Container probes use `/readyz` on SERVICE_PORT.
+  First-party runtime images use Distroless static, retaining existing user IDs.
+  Container probes run the service binary's `healthcheck` command against local
+  `/readyz` on SERVICE_PORT (default 8080); a TLS-enabled broker instead uses
+  its loopback HEALTH_PORT (default 8081). Keep Compose and generated Swarm
+  overrides in exec form; no runtime shell or wget is available.
 - All services use slog JSON logs on stderr. LOG_LEVEL selects DEBUG, INFO
   (default), WARN, or ERROR. Routine HTTP traffic, SQL, static assets, and health
   probes are quiet at INFO. Request failures use generated IDs, static route
