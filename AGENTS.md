@@ -387,7 +387,9 @@ on them, and update this guide when they change.
   explicit maintenance: Caddy/PostgreSQL downtime, a verified local cold volume
   archive and an in-place major upgrade, followed by a PostgreSQL-only service
   update. Keep the selected POSTGRES_IMAGE_TAG and POSTGRES_VOLUME_TARGET in
-  the operator environment for future deployments. Read the recovery procedure
+  the operator environment for future deployments. POSTGRES_UPGRADE_IMAGE can
+  select a custom migration image; preserve binary version checks and digest
+  pinning for overrides. Read the recovery procedure
   in `infra/docs/operations.md`; never run this target as validation.
 
 ## Change discipline
