@@ -1,10 +1,10 @@
 .DEFAULT_GOAL := help
 INFRA_ENV_FILE ?= $(CURDIR)/infra/.env
 
-.PHONY: help status push latest-tags config deploy deploy-latest broker-pki postgres-upgrade
+.PHONY: help status push latest-tags config config-extra deploy deploy-extra deploy-latest broker-pki postgres-upgrade
 
 help:
-	@printf '%s\n' 'make status         Show subrepo branches, changed files and unpushed commits (local refs)' 'make push           Show status, then offer to push subrepo branches and all tags (Y/N)' 'make latest-tags    Fetch stable service release tags and update infra/.env' 'make broker-pki     Prepare an internal broker CA and TLS secret' 'make postgres-upgrade  Back up and upgrade PostgreSQL with Caddy offline' 'make config         Validate and render the Swarm stack' 'make deploy         Deploy with the selected tags' 'make deploy-latest  Select the latest tags and deploy'
+	@printf '%s\n' 'make status         Show subrepo branches, changed files and unpushed commits (local refs)' 'make push           Show status, then offer to push subrepo branches and all tags (Y/N)' 'make latest-tags    Fetch stable service release tags and update infra/.env' 'make broker-pki     Prepare an internal broker CA and TLS secret' 'make postgres-upgrade  Back up and upgrade PostgreSQL with Caddy offline' 'make config         Validate and render the Swarm stack' 'make deploy         Deploy the core stack with the selected tags' 'make config-extra   Validate extra apps without deploying' 'make deploy-extra   Fetch broker credentials and deploy extra apps' 'make deploy-latest  Select the latest tags and deploy'
 
 status:
 	@git submodule foreach --recursive '\
@@ -40,7 +40,7 @@ push: status
 latest-tags:
 	bash scripts/update-image-tags.sh "$(INFRA_ENV_FILE)"
 
-config deploy broker-pki postgres-upgrade:
+config config-extra deploy deploy-extra broker-pki postgres-upgrade:
 	$(MAKE) -C infra ENV_FILE="$(abspath $(INFRA_ENV_FILE))" $@
 
 deploy-latest: latest-tags

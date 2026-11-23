@@ -222,7 +222,7 @@ source remain authoritative for service-specific details.
 ### infra
 
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Valkey,
-  the broker, access-gateway, files, public RazChess/UUID/GeoIP/0x40hues apps, Dozzle,
+  the broker, access-gateway, files, Dozzle,
   Caddy Docker Proxy, a public landing page at `razzie.cloud`, and a whoami demo.
   Swarm's `DOMAIN` setting defaults to `razzie.cloud` and controls public hostnames,
   auth origins, and landing-page links and metadata.
@@ -231,8 +231,11 @@ source remain authoritative for service-specific details.
   The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
   deployment labels and publishes ports 80/443 in host mode to preserve visitor
   IPs for GeoIP. Public DNS targets the manager running Caddy.
-  RazChess and GeoIP use `--redis-from` with separate Valkey instances. Their
-  startup wrappers wait for broker readiness; RazChess stays at one replica.
+  Public RazChess/UUID/GeoIP/0x40hues definitions live individually in infra/extra/.
+  Root/infra make config-extra and deploy-extra discover those YAMLs separately.
+  Broker labels map Redis/PostgreSQL instances to deploy-time environment variables;
+  the temporary fetcher reuses scoped tokens and verified TLS. RazChess and GeoIP
+  use separate Valkey instances; RazChess stays at one replica.
   Its default session loader uses `SCAN`, compatible with broker ACLs. See
   `infra/docs/operations.md`.
 - `deploy.sh` creates missing external Docker secrets and deploys the stack.
@@ -377,7 +380,7 @@ on them, and update this guide when they change.
   separate from those changes and do not commit them incidentally.
 - The stack requires platform and third-party image tags from ignored
   `infra/.env`; `.env.example` in infra lists the variables. RazChess, UUID,
-  GeoIP and 0x40hues use fixed stack defaults with optional overrides and are excluded from
+  GeoIP and 0x40hues use fixed extra YAML defaults with optional overrides and are excluded from
   tag discovery. Keep other current service versions out of stack files and all
   current versions out of README.md and AGENTS.md. Root `make latest-tags` selects
   the highest stable numeric release tags from the five platform service remotes
