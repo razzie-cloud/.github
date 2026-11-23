@@ -1,5 +1,167 @@
 # Frontend design mockups
 
+## Notes attachment browser proposal
+
+The attachment browser in [light](../notes/docs/mockups/attachment-browser.html)
+and [dark](../notes/docs/mockups/dark/attachment-browser.html) adds **Attachments**
+to the selected notebook's sidebar, including on mobile. **All attachments** and
+**Orphaned** categories show searchable files, parent notes/paths, sample sizes
+and downloads. Orphaned files in writable notebooks have a confirmation before
+simulated deletion. Read-only and empty notebooks are included.
+
+Notes currently retains attachments in S3 when their parent note is deleted or
+externally moved/renamed; there is no automatic cleanup. They remain accessible
+by the owner through the API. Orphaned means the parent note path is missing,
+not merely that its Markdown no longer links to a file. The proposal explains
+this retention alongside the list.
+
+See the [screen guide](../notes/docs/mockups/README.md#attachment-browser-proposal),
+[desktop screenshot](../notes/docs/mockups/attachment-browser-personal-desktop.png)
+and [dark orphaned mobile screenshot](../notes/docs/mockups/dark/attachment-browser-orphaned-mobile.png).
+Deletion outcome examples cover changed files, restored parent notes and
+unavailable storage. These previews make local GET requests only; their searches
+and simulated deletions do not change Notes or storage.
+
+Brave/Chromium passed 32 light/dark notebook layouts at 320/390/768/1440 pixels,
+including search, sample downloads, theme context, categories, keyboard/focus,
+confirmation/cancellation, retained files on failures and receipt retry. Twenty
+screenshots were saved and representative views visually reviewed. References,
+IDs, account-header equality and whitespace checks passed; temporary previews
+were stopped. No production service checks, live SSO/S3, publication or deployment ran.
+
+Notes now implements the attachment sidebar, paged browser and confirmed orphan
+deletion in its embedded UI. Parent checks distinguish missing notes from
+unindexed/unreadable notes; deletion rechecks the parent, current file validator
+and read-only policy. HTMX keeps the shell, filters and existing history entry.
+Production shows indexed global file totals and a verified per-page orphan count,
+with a submitted search form; the static previews retain their sample fixtures.
+See [implementation verification](../notes/docs/verification.md#attachment-browser-2026-11-23).
+
+Implementation passed Notes build, vet, full tests and race tests with disposable
+loopback PostgreSQL and in-memory S3 (192 tests per suite). All five maintained
+browser regressions passed. The new overview covered both themes at
+320/390/768/1440 pixels, including downloads, conditional deletion, failures,
+history, read-only/empty notebooks and draft protection. Production screenshots
+were visually reviewed; shared account-header and whitespace checks passed.
+Temporary fixtures were removed. No live SSO/provider acceptance, publication or
+deployment ran.
+
+## Notes save-time attachments proposal
+
+The existing-note editor in [light](../notes/docs/mockups/attachments.html) and
+[dark](../notes/docs/mockups/dark/attachments.html) queues multiple files across
+repeated selections, with a visible list and individual removal. **Save changes**
+uploads the queue with a progress bar; there is no separate upload button.
+Already attached files share the pending files' icons and retain their individual
+**Remove** action, including newly saved attachments, while preserving the draft
+and pending queue.
+The new-note editor in [light](../notes/docs/mockups/attachments-new.html) and
+[dark](../notes/docs/mockups/dark/attachments-new.html) supports the same flow
+before the first save. Both use the current notebook sidebar and account header.
+
+Use **Add sample files** or select local files, then Save. **Preview save outcomes**
+demonstrates interrupted uploads with retained drafts and retry, and note conflicts
+that leave files pending. All operations are simulated; file contents and editor
+values are never sent. See the
+[screen guide](../notes/docs/mockups/README.md#save-time-attachments-proposal),
+[pending-files screenshot](../notes/docs/mockups/attachments-desktop.png) and
+[dark mobile progress](../notes/docs/mockups/dark/attachments-progress-mobile.png).
+Notes now implements this flow in its embedded production editor. These previews
+remain independent sample fixtures.
+
+Brave/Chromium passed both editor flows in light/dark at 320/390/768/1440 pixels,
+including repeated native file selection, keyboard/focus, individual removal,
+upload progress, retained drafts, interrupted-upload retry, conflicts, and
+existing/newly saved attachment removal with failure/retry, plus matching file
+icons and filename alignment before/after saving.
+Twenty-two screenshots were refreshed; attached-file icons and Remove controls were visually
+reviewed on desktop/mobile in both themes. All requests
+were local GETs without submitted values or file contents. Local-reference,
+account-header equality and whitespace checks passed; temporary preview
+processes were stopped. No production service checks, live SSO/S3, publication
+or deployment ran.
+
+Implementation passed Notes build, vet, full tests and race tests with disposable
+loopback PostgreSQL and in-memory S3 (169 tests in each suite). All four maintained
+browser regressions passed, including real attachment uploads/downloads,
+keyboard selection, size/name checks, partial retry, conditional saves/removal,
+retained drafts/history, expired sessions and read-only controls. Both themes
+covered 320/390/768/1440 pixels. Production screenshots were visually reviewed;
+shared account-header and whitespace checks passed. Temporary fixtures were
+removed. See the [implementation verification](../notes/docs/verification.md#save-time-attachment-queue-2026-11-23).
+No live SSO, production S3, publication or deployment ran.
+
+## Notes default notebook proposal
+
+The library preview in [light](../notes/docs/mockups/default-notebook.html) and
+[dark](../notes/docs/mockups/dark/default-notebook.html) adds **Make default** beside
+the current notebook title, following the current sidebar navigation. The
+[notebook management preview](../notes/docs/mockups/default-notebooks.html) adds the
+same action to each notebook card. A **Default notebook** badge and sidebar star
+identify the choice. Switching notebooks leaves the default alone; opening Notes
+without an explicit notebook opens the chosen default.
+
+Try the action, then **Open Notes** in the preview bar. The demo preference lasts
+in the current browser tab only; authored HTMX receipts make no backend writes.
+Read-only and empty notebooks are included. See the
+[screen guide](../notes/docs/mockups/README.md#default-notebook-proposal),
+[library screenshot](../notes/docs/mockups/default-notebook-action-desktop.png) and
+[dark management screenshot](../notes/docs/mockups/dark/default-notebooks-desktop.png).
+
+Brave/Chromium checked 40 light/dark layouts at 320/390/768/1440 pixels, default
+selection from both screens, launch behavior, explicit links, themes, focus,
+alignment, and failure/retry. Twelve screenshots were visually reviewed; local
+references and whitespace checks passed. This is a static proposal; production
+persistence and service checks were not part of this work.
+
+Notes now implements the reviewed default-notebook controls with durable,
+owner-scoped PostgreSQL preferences. Its header service link opens the saved
+default, explicit notebook links keep their destination, and removal falls back
+to the first remaining notebook alphabetically. Add/edit/remove and crypt
+recovery controls remain available. HTMX changes refresh the full notebook
+context while retaining library filters and the current URL/history entry.
+First-notebook creation saves the default atomically, preserving it when more
+notebooks are added or renamed. Existing accounts' current fallback is saved
+on migration without overwriting explicit choices.
+
+Implementation passed Notes build, vet, full tests and race tests using
+disposable loopback PostgreSQL and in-memory S3. The maintained browser tests
+covered default selection and persistence through real handlers, launch behavior,
+keyboard, themes, URL/history retention, failure/retry and existing navigation
+and sidebar flows. Production screenshots were visually reviewed. Initial
+concurrent checks hit storage/navigation timeouts; isolated reruns passed.
+Whitespace and shared account-header equality checks passed; the temporary
+database was removed. No live SSO, production S3, publication or deployment ran.
+
+## Notes notebook sidebar proposal
+
+The [light preview](../notes/docs/mockups/notebook-sidebar.html) and
+[dark preview](../notes/docs/mockups/dark/notebook-sidebar.html) list every sample
+notebook directly in the sidebar, replacing the library's notebook dropdown.
+Selection updates the notebook's library, tags and access state together.
+Management remains separate, and mobile shows the full list in two columns.
+Fixtures include writable, read-only and empty notebooks; no backend writes occur.
+See the [screen guide](../notes/docs/mockups/README.md#notebook-sidebar-proposal),
+[desktop screenshot](../notes/docs/mockups/notebook-sidebar-desktop.png) and
+[dark mobile screenshot](../notes/docs/mockups/dark/notebook-sidebar-mobile.png).
+
+Notes now implements the notebook links, selection and wrapping inline hashtags
+in its embedded UI. Manage notebooks and Connections remain separate sidebar
+links, and notebook selection preserves the existing HTMX history and draft
+guards. Lock indicators account for connection-level read-only policy as well
+as notebook policy. The static previews remain sample fixtures.
+
+Implementation checks passed `go build ./...`, `go vet ./...`, `go test ./...`
+and `go test -race ./...` in Notes, with disposable loopback PostgreSQL and
+in-memory S3 fixtures (164 tests passed). Both maintained browser regressions
+passed: four notebook states in light/dark at 320/390/768/1440 pixels, inline
+tag selection, long names, alignment, settings navigation, fresh history,
+unsaved-draft guards, preview lifecycle and authentication-error recovery.
+Production-template screenshots were visually reviewed. Whitespace and shared
+account-header equality checks passed. The temporary database was removed.
+Browser fixtures do not establish live SSO or production S3 acceptance. Nothing
+was published or deployed.
+
 ## Files shares overview
 
 The [Shares preview](../files/docs/mockups/shares.html) and

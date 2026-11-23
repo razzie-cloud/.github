@@ -186,9 +186,18 @@ source remain authoritative for service-specific details.
   protect retries/duplicates. Only complete listings permit sweep; authoritative
   absence checks remove derived rows. Search uses PostgreSQL simple vectors.
 - Embedded PicoCSS/HTMX includes storage setup, notebook selection and explicit
-  saves with preserved conflict drafts. Compose/Swarm keep every path behind SSO;
+  saves with preserved conflict drafts. Repeated multi-file selections build an
+  in-memory queue, including for new notes. Save writes the note before uploading
+  attachments with progress; retry skips acknowledged uploads. Attached-file
+  removal preserves the draft and queue. Compose/Swarm keep every path behind SSO;
   /v1/admin/* requires the same verified signed admin role as shared connections;
   every Notes path uses ordinary /forward_auth, as Files does.
+- Notes' notebook sidebar includes an attachment browser with All / Orphaned
+  categories, search, downloads and confirmed orphan deletion. The index bounds
+  listing pages; authoritative parent absence is checked in storage. Orphan
+  deletion rechecks the parent, current attachment validator and read-only policy
+  under object/settings locks. No automatic cleanup runs; removing a note retains
+  its attachments. Sidebar browsing remains available on mobile.
 - Run build/vet/tests/race inside notes/. PostgreSQL integration uses disposable
   loopback TEST_DATABASE_URL and random schemas; S3 fixtures start automatically.
   Tests include independent rclone filesystem compatibility and encrypted rebuild.
