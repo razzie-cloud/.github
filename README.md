@@ -12,6 +12,7 @@ use and tracks their independent repositories as Git submodules.
 | [database-broker](database-broker/README.md) | Creates per-service PostgreSQL and Valkey databases and returns their connection URIs |
 | [files](files/README.md) | Browse, upload, and share S3 files, with optional rclone encryption |
 | [notes](notes/README.md) | Markdown notes with user-managed S3 connections, optional rclone encryption, and search |
+| [chess](chess/README.md) | Private guest matches, permanent Sessions/Archive history and curated mate puzzles |
 | [landing](landing/README.md) | Public landing page and authenticated Home with personal welcome and app links |
 | [infra](infra/README.md) | Deploys the platform with Docker Swarm and Caddy; includes optional NixOS host configuration |
 
@@ -38,6 +39,13 @@ docker compose logs access-gateway
 For an existing checkout, initialize missing components with
 `git submodule update --init --recursive` after checking for local changes.
 
+Chess is registered as the `chess/` submodule. Its intended remote and component
+commits must be published before the parent pin can be cloned elsewhere, and its
+image must be published before deployment. The local stack builds the checked-out
+source. The [design and implementation evidence](chess/docs/plans/2026-11-24-chess-implementation.md)
+live in the Chess repository. Production cutover must also remove the old
+RazChess service; see [Chess release preparation](infra/docs/operations.md#chess-cutover-and-rollback).
+
 The broker defaults to scoped tokens. Development secrets are generated under
 ignored `.local/broker-auth`; production keys stay in Swarm. The explicit legacy
 Compose override needs no auth files; see [broker authentication](docs/database-broker-auth.md).
@@ -56,6 +64,9 @@ then sign in. The token is logged only once when generated.
 | <http://auth.localhost:8080> | Gateway: sign in, add users, and enroll devices |
 | <http://whoami.localhost:8080> | Whoami: see the identity passed to a protected app |
 | <http://files.localhost:8080> | Files: connect your S3 storage and add a directory |
+| <http://notes.localhost:8080> | Notes: create notebooks on your S3 connections |
+| <http://chess.localhost:8080> | Chess: create private matches, manage history and solve puzzles |
+| <http://shared-chess.localhost:8080> | Guest playing/viewing links only; the root returns 404 |
 | <http://logs.localhost:8080> | Dozzle: view container logs as an administrator |
 | <http://shared-files.localhost:8080> | Public share host: open a link created in Files; the root returns 404 |
 

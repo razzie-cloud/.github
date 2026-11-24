@@ -20,6 +20,7 @@ Exact copies of `razzie-cloud-logo-small.png` are kept at these paths in the par
 - `files/internal/web/static/razzie-cloud-logo.png`
 - `notes/docs/mockups/assets/razzie-cloud-logo.png` (static mockups)
 - `notes/internal/web/static/razzie-cloud-logo.png`
+- `chess/internal/web/static/razzie-cloud-logo.png`
 - `landing/assets/razzie-cloud-logo-small.png`
 
 Landing also keeps an exact copy of the full-size artwork at
@@ -54,7 +55,7 @@ rather than as another name for a connection.
 
 ## Signed-in account header
 
-Access Gateway, Files, Notes, authenticated Home and future authenticated Razzie Cloud services use
+Access Gateway, Files, Notes, Chess, authenticated Home and future authenticated Razzie Cloud services use
 the same upper-right account control: the existing 20px shield/check line icon,
 the bold username linking to Access Gateway's public account page, then a green
 **Administrator** badge on the same line only for administrators. Regular users
@@ -62,7 +63,7 @@ have no role badge. Keep the shield and username visible on mobile; truncate
 long usernames within the available space rather than widening the page.
 Use the shared spacing, sizes, colors and focus treatment from
 [`account-header.css`](../../access-gateway/internal/web/static/account-header.css).
-The Files/Notes/Landing copies must remain identical. Use the existing local SVG, PicoCSS
+The Files/Notes/Chess/Landing copies must remain identical. Use the existing local SVG, PicoCSS
 and escaped Go templates; keep each independently deployable service's assets local.
 
 The identity markup is `.identity` containing the shield and `.identity-copy`;
@@ -73,7 +74,7 @@ Settings links belong in app navigation. Sign out belongs in Gateway's sidebar,
 with the note that connected apps are also signed out. Do not add app-local
 sign-out controls or duplicate the identity in a full-width account card.
 
-Gateway uses its configured public `ORIGIN` for the account link. Files/Notes
+Gateway uses its configured public `ORIGIN` for the account link. Files/Notes/Chess
 use the public issuer pinned by gateway key discovery, never the private
 `ACCESS_GATEWAY_URL` or incoming Host/forwarded headers. Their independent
 `gatewayidentity.AccountURL` helpers remain synchronized. Legacy proxy mode

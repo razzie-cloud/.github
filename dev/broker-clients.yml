@@ -19,6 +19,11 @@ clients:
     allow:
       - adapter: postgres
         instance: notes
+  chess:
+    generation: 1
+    allow:
+      - adapter: postgres
+        instance: chess
   razchess:
     generation: 1
     allow:

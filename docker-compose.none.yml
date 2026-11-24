@@ -19,3 +19,7 @@ services:
     volumes: !reset []
     environment:
       BROKER_TOKEN_FILE: ""
+  chess:
+    volumes: !reset []
+    environment:
+      BROKER_TOKEN_FILE: ""

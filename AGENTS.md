@@ -17,7 +17,7 @@ source remain authoritative for service-specific details.
 ## Repository boundaries and Git workflow
 
 - This is the Razzie Cloud parent repository. `access-gateway/`, `database-broker/`, `files/`,
-  `notes/`, `landing/`, and `infra/` are Git submodules with separate histories and GitHub remotes
+  `notes/`, `chess/`, `landing/`, and `infra/` are Git submodules with separate histories and GitHub remotes
   under `razzie-cloud`. Use standard `git submodule` commands.
 - Keep root documentation and coordination files in the parent. Change service
   code and deployment files in their owning submodule. Do not copy child source
@@ -202,6 +202,34 @@ source remain authoritative for service-specific details.
   loopback TEST_DATABASE_URL and random schemas; S3 fixtures start automatically.
   Tests include independent rclone filesystem compatibility and encrypted rebuild.
 
+### chess
+
+- Independent Go module `github.com/razzie-cloud/chess`, registered as the `chess/`
+  submodule; entry `cmd/chess/main.go`. Remote/image publication remains pending.
+  Publish component commits before publishing parent pins. Read `chess/AGENTS.md`,
+  the [design plan](chess/docs/plans/2026-11-24-chess-design.md) and
+  [implementation evidence](chess/docs/plans/2026-11-24-chess-implementation.md).
+- Signed-in `chess` owns setup, Sessions/Archive, deletion and personal puzzles;
+  `shared-chess` exposes only fragment-token guest exchange, guest play, viewing
+  capabilities and static assets. Both proxy and app enforce the host boundary.
+  Gateway owns SSO; Chess always verifies signed PASETO assertions on its app host.
+- PostgreSQL owns matches, canonical moves, grants, sessions, receipts, viewer
+  leases, immutable puzzle definitions, attempts and completion bitsets. No
+  Chess Redis/Valkey or S3 backend is needed. Matches never expire; explicit
+  owner deletion retains minimal creation tombstones. Back up the full database.
+- Rules use malbrecht/chess with strict UCI/FEN and bounded PGN input. ECO data is
+  normalized locally and embedded; preserve deepest-prefix labels after leaving
+  book. Puzzle proof runs only in `cmd/puzzleprep`; published solutions must cover
+  every defense with at most one fork and three complete lines.
+- Local Compose builds `./chess`, uses its dedicated PostgreSQL broker token,
+  and exposes `chess.localhost` / `shared-chess.localhost`. Swarm requests two
+  replicas with shared PostgreSQL and no affinity. The legacy extra RazChess
+  definition is removed; cutover must explicitly stop the old running service,
+  preserve its Valkey data/grant for rollback and prepare public-host DNS/TLS.
+- Run build/vet/unit/race checks inside `chess/`; database tests require disposable
+  loopback `TEST_DATABASE_URL`. See the service verification report for actual
+  passes and remaining browser/live acceptance limits.
+
 ### landing
 
 - Independent `github.com/razzie-cloud/landing` Go module and homepage image.
@@ -232,7 +260,7 @@ source remain authoritative for service-specific details.
 
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Valkey,
   the broker, access-gateway, files, Dozzle,
-  Caddy Docker Proxy, a public landing page at `razzie.cloud`, and a whoami demo.
+  Caddy Docker Proxy, Chess, a public landing page at `razzie.cloud`, and a whoami demo.
   Swarm's `DOMAIN` setting defaults to `razzie.cloud` and controls public hostnames,
   auth origins, and landing-page links and metadata.
   `landing/` is an independent submodule that packages the static page in `ghcr.io/razzie-cloud/landing`;
@@ -240,12 +268,11 @@ source remain authoritative for service-specific details.
   The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
   deployment labels and publishes ports 80/443 in host mode to preserve visitor
   IPs for GeoIP. Public DNS targets the manager running Caddy.
-  Public RazChess/UUID/GeoIP/0x40hues definitions live individually in infra/extra/.
+  Public UUID/GeoIP/0x40hues definitions live individually in infra/extra/.
   Root/infra make config-extra and deploy-extra discover those YAMLs separately.
   Broker labels map Redis/PostgreSQL instances to deploy-time environment variables;
-  the temporary fetcher reuses scoped tokens and verified TLS. RazChess and GeoIP
-  use separate Valkey instances; RazChess stays at one replica.
-  Its default session loader uses `SCAN`, compatible with broker ACLs. See
+  the temporary fetcher reuses scoped tokens and verified TLS. GeoIP uses its own Valkey instance. The legacy RazChess grant/data remain
+  only for the explicit rollback window; Chess uses a separate PostgreSQL instance. See
   `infra/docs/operations.md`.
 - `deploy.sh` creates missing external Docker secrets and deploys the stack.
   Its defaults are Docker context `razcloud` and stack name `razzie-cloud`,
@@ -282,13 +309,14 @@ source remain authoritative for service-specific details.
   clean up all test data/users; its container fallback uses Valkey 9.1.0.
 - Each service has its own Dockerfile and Compose file. The gateway/broker stacks both
   publish ports 5432 and 8080; run them separately or adjust host port mappings.
-- The parent `docker-compose.yml` builds all four services and runs a local auth
+- The parent `docker-compose.yml` builds the first-party services and runs a local auth
   demo with PostgreSQL, Valkey, Caddy, and traefik/whoami. Copy `.env.example`
   to `.env` and set separate local `POSTGRES_PASSWORD` and `VALKEY_PASSWORD`
   values before starting. Caddy publishes a single loopback HTTP port, `8080`,
   and routes by hostname: public homepage `http://localhost:8080`, gateway
   `http://auth.localhost:8080`, signed-in Home `http://home.localhost:8080`, whoami `http://whoami.localhost:8080`, Files
-  `http://files.localhost:8080`, Notes `http://notes.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
+  `http://files.localhost:8080`, Notes `http://notes.localhost:8080`, Chess
+  `http://chess.localhost:8080`, guest/view links `http://shared-chess.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
   `LOCAL_PORT` overrides the shared port. Compose builds `landing/` with
   runtime domain/port settings and an optional app-list JSON mount; rebuild only after source or asset changes.
   The broker provisions the gateway's
@@ -388,12 +416,12 @@ on them, and update this guide when they change.
 - The existing local changes in infra predate parent setup. Keep unrelated fixes
   separate from those changes and do not commit them incidentally.
 - The stack requires platform and third-party image tags from ignored
-  `infra/.env`; `.env.example` in infra lists the variables. RazChess, UUID,
+  `infra/.env`; `.env.example` in infra lists the variables. UUID,
   GeoIP and 0x40hues use fixed extra YAML defaults with optional overrides and are excluded from
   tag discovery. Keep other current service versions out of stack files and all
   current versions out of README.md and AGENTS.md. Root `make latest-tags` selects
-  the highest stable numeric release tags from the five platform service remotes
-  (gateway, broker, Files, Notes and landing)
+  the highest stable numeric release tags from the six platform service remotes
+  (gateway, broker, Files, Notes, Chess and landing)
   without changing source checkouts or parent pins. Root `make config` and `make deploy` delegate to
   infra's Makefile, which loads and exports the selected environment file.
   `make deploy-latest` combines tag selection and deployment; do not run it as
@@ -426,7 +454,7 @@ that elements look aligned, as well as checking their bounding boxes.
 
 Authenticated service headers follow the [shared account-header contract](docs/brand/README.md#signed-in-account-header):
 shield, username linked to the public gateway and an inline Administrator badge
-only for admins, also on mobile. Keep the four local `account-header.css` copies
+only for admins, also on mobile. Keep the five local `account-header.css` copies
 identical and use this pattern in future apps. Gateway owns sidebar sign-out;
 public/anonymous shells omit account identity. Never use the private gateway
 discovery URL as a browser destination or unsigned role headers for the badge.
