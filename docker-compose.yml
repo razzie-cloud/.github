@@ -1,10 +1,28 @@
 name: razcloud
 
+x-air: &air
+  pull_policy: build
+  init: true
+  stop_grace_period: 30s
+  healthcheck:
+    test: ["CMD", "/tmp/air/app", "healthcheck"]
+    interval: 2s
+    timeout: 3s
+    start_period: 180s
+    retries: 30
+
+x-air-build: &air-build
+  dockerfile: Dockerfile.dev
+  args:
+    DEV_UID: ${DEV_UID:-1000}
+    DEV_GID: ${DEV_GID:-1000}
+
 services:
   landing:
-    image: ghcr.io/razzie-cloud/landing:local
-    pull_policy: build
+    <<: *air
+    image: razcloud-landing:dev
     build:
+      <<: *air-build
       context: ./landing
     environment:
       DOMAIN: localhost
@@ -14,6 +32,8 @@ services:
       ACCESS_GATEWAY_URL: http://access-gateway:8080
       APPS_CONFIG_FILE: /etc/landing/apps.json
     volumes:
+      - ./landing:/src:ro
+      - landing_go_build:/tmp/go-build
       - ${LANDING_APPS_FILE:-./landing/apps.example.json}:/etc/landing/apps.json:ro
     networks:
       - web
@@ -64,11 +84,16 @@ services:
       retries: 30
 
   database-broker:
+    <<: *air
+    image: razcloud-database-broker:dev
     volumes:
+      - ./database-broker:/src:ro
+      - broker_go_build:/tmp/go-build
       - ./dev/broker-clients.yml:/run/configs/broker_policy.yml:ro
       - ./.local/broker-auth/master:/run/secrets/broker_master:ro
     build:
       context: ./database-broker
+      dockerfile: Dockerfile.dev
       network: host
     environment:
       AUTH_MODE: token
@@ -84,19 +109,17 @@ services:
         condition: service_healthy
       valkey:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "/database-broker", "healthcheck"]
-      interval: 2s
-      timeout: 2s
-      retries: 30
 
   access-gateway:
-    image: ghcr.io/razzie-cloud/access-gateway:${ACCESS_GATEWAY_IMAGE_TAG:-dev}
-    pull_policy: build
+    <<: *air
+    image: razcloud-access-gateway:dev
     build:
       context: ./access-gateway
+      dockerfile: Dockerfile.dev
       network: host
     volumes:
+      - ./access-gateway:/src:ro
+      - gateway_go_build:/tmp/go-build
       - ./.local/broker-auth/access_gateway.token:/run/secrets/broker_token:ro
     environment:
       BROKER_TOKEN_FILE: /run/secrets/broker_token
@@ -137,10 +160,15 @@ services:
       - web
 
   files:
+    <<: *air
+    image: razcloud-files:dev
     build:
+      <<: *air-build
       context: ./files
       network: host
     volumes:
+      - ./files:/src:ro
+      - files_go_build:/tmp/go-build
       - ./.local/broker-auth/files.token:/run/secrets/broker_token:ro
     environment:
       BROKER_TOKEN_FILE: /run/secrets/broker_token
@@ -164,10 +192,15 @@ services:
         condition: service_healthy
 
   notes:
+    <<: *air
+    image: razcloud-notes:dev
     build:
+      <<: *air-build
       context: ./notes
       network: host
     volumes:
+      - ./notes:/src:ro
+      - notes_go_build:/tmp/go-build
       - ./.local/broker-auth/notes.token:/run/secrets/broker_token:ro
     environment:
       BROKER_TOKEN_FILE: /run/secrets/broker_token
@@ -189,10 +222,15 @@ services:
         condition: service_healthy
 
   chess:
+    <<: *air
+    image: razcloud-chess:dev
     build:
+      <<: *air-build
       context: ./chess
       network: host
     volumes:
+      - ./chess:/src:ro
+      - chess_go_build:/tmp/go-build
       - type: bind
         source: ./.local/broker-auth/chess.token
         target: /run/secrets/broker_token
@@ -263,3 +301,9 @@ volumes:
   postgres_data:
   valkey_data:
   dozzle_data:
+  broker_go_build:
+  gateway_go_build:
+  files_go_build:
+  notes_go_build:
+  chess_go_build:
+  landing_go_build:

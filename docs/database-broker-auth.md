@@ -11,9 +11,10 @@ need separate rotation. See the broker's [protocol and CLI](../database-broker/d
 With Go 1.27, run `make local-auth` before `docker compose up --build`.
 The broker CLI validates dev/broker-clients.yml, creates an independent random
 32-byte master and writes derived app tokens into ignored .local/broker-auth.
-Token files are read-only app mounts, including UID 10001 consumers; the master
-is mounted only into the broker. Existing development keys are reused. Missing
-keys with existing token state fail instead of being silently replaced.
+Token files are read-only app mounts, readable by the configured development
+users; the master is mounted only into the broker. Existing development keys are
+reused. Missing keys with existing token state fail instead of being silently
+replaced.
 
 Development policy uses a different deployment identity and key version from
 production. Never copy production key/token material to a development machine.
@@ -26,7 +27,9 @@ The explicit legacy configuration requires no policy, key or token files:
 docker compose --env-file .env -f docker-compose.yml -f docker-compose.none.yml up --build -d
 ```
 
-This override resets auth mounts and selects AUTH_MODE=none. There is no automatic
+This override removes auth mounts and selects AUTH_MODE=none. It inherits the
+main file's Air development images and keeps source mounts and build caches.
+Gateway passkey sign-in and app SSO remain enabled. There is no automatic
 fallback when token configuration, token files or authentication fail. The standalone
 broker stack has equivalent dev preparation and none-mode override in its repository.
 Other standalone consumer stacks with direct database URIs need no broker resources.

@@ -34,15 +34,15 @@ docker compose up --build -d
 docker compose logs access-gateway
 ```
 
-Compose builds the gateway from the checked-out source and tags it as
-`ghcr.io/razzie-cloud/access-gateway:dev`. Override `ACCESS_GATEWAY_IMAGE_TAG`
-in `.env` to change the local build's tag.
+Compose builds all six first-party services with their `Dockerfile.dev` and
+tags them as `razcloud-<service>:dev`. Air automatically rebuilds and restarts
+each service when its source or embedded assets change.
 
 The public homepage is at <http://localhost:8080>. Compose builds the independent
 `landing/` submodule. Its optional `LANDING_APPS_FILE` JSON mount defaults to the
 Files/Notes example. Domain, scheme and `LOCAL_PORT` are rendered at container
-startup. Recreate containers after port or config changes; rebuild the landing
-image only after source or asset changes. One landing service uses `PAGE_MODE=both`
+startup. Recreate containers after port or external config changes; Air handles
+source and asset changes automatically. One landing service uses `PAGE_MODE=both`
 to serve the public apex and <http://home.localhost:8080> by Host on the same port.
 Home requires signed identity; Compose waits for gateway readiness before starting
 landing. Both pages share startup and restart availability. After upgrading from
@@ -97,6 +97,62 @@ Administrator authorization comes from the gateway's current database role.
 Dozzle's settings persist in the `dozzle_data` volume. Its Docker socket mount
 is read-only, but that does not restrict Docker API operations; only run this
 setup against a trusted local daemon.
+
+### Automatic recompilation
+
+The main Compose file uses development images for Gateway, Broker, Files,
+Notes, Chess and Landing. After the initial `.env` and `make local-auth` setup:
+
+```sh
+docker compose up --build -d
+docker compose logs -f files
+```
+
+Each service's `Dockerfile.dev` runs pinned [Air](https://github.com/air-verse/air)
+with its local `.air.toml`. The source is mounted read-only at `/src`; generated
+binaries and logs stay in `/tmp/air`, and a separate named Go build cache per
+service survives container recreation. Polling supports Docker Desktop and WSL
+mounts. The first compilation can take longer; development health checks allow
+three minutes before counting failures.
+
+Files, Notes, Chess and Landing development images run as `DEV_UID:DEV_GID`
+(both default to 1000) so they can read source files restricted to your host
+user. Set these in `.env` to `id -u` / `id -g` before the first build if needed;
+standalone builds accept the same values as Docker build arguments. Broker and
+Gateway retain their existing root identity for mounted secret access.
+
+Saving Go source, templates, CSS, JavaScript, images, fonts or embedded SQL/JSON/TSV
+data rebuilds and restarts the affected service. Reload the browser after Air's
+`running...` message to see the updated assets. Build errors appear in container
+logs and stop the old process until the next successful build. Air sends an
+interrupt on restart, allowing up to 25 seconds for graceful shutdown.
+
+Go modules are downloaded into each image during its build. After changing
+`go.mod`/`go.sum`, rebuild that service with the same Compose command (append its
+name to limit the build). The broker remains on the internal network, so it
+cannot fetch new dependencies at runtime. Restart a service after editing its
+`.air.toml`; recreate it after environment or external configuration changes,
+including `LANDING_APPS_FILE`. Production Dockerfiles and Swarm are unchanged.
+
+For explicit legacy broker authentication, use
+`docker compose -f docker-compose.yml -f docker-compose.none.yml up --build -d`.
+This uses the same development images, source mounts and build caches, while
+disabling only broker token authentication and removing its auth mounts. Gateway
+passkey sign-in and app SSO remain enabled. Both modes keep the existing
+database/session volumes.
+
+The development Dockerfiles also work independently: build with
+`docker build -f Dockerfile.dev -t <service>:dev .` from the service directory,
+then bind-mount that directory read-only at `/src` when running the image and
+supply the service's usual environment and dependencies. For example, Landing's
+standalone public mode needs no database:
+
+```sh
+docker build -f landing/Dockerfile.dev -t razcloud-landing:dev ./landing
+docker run --rm --init -p 127.0.0.1:8080:8080 \
+  -v "$PWD/landing:/src:ro" -e DOMAIN=localhost -e SCHEME=http \
+  -e PUBLIC_PORT=8080 razcloud-landing:dev
+```
 
 ### Host browser troubleshooting
 
@@ -185,9 +241,9 @@ following Files; notebook lookups remain owner-scoped. See
 
 ### Local stack internals and cleanup
 
-The root [docker-compose.yml](../docker-compose.yml) builds all four Go services from
-their submodules using host build networking, matching the gateway's standalone
-Compose setup, plus the Go landing-page service image from `landing/`.
+The root [docker-compose.yml](../docker-compose.yml) builds all six first-party
+services from their submodules using `Dockerfile.dev`, with read-only source
+mounts and named Go build caches for automatic recompilation.
 The homepage joins only the web network, is public, and has no database dependency.
 The broker provisions the gateway's, Files' and Notes' PostgreSQL databases
 and the gateway's numbered Valkey database. The gateway discovers
@@ -230,15 +286,15 @@ docker compose config --quiet
 
 ### Run service checks
 
-First-party Dockerfiles use Distroless static runtime images, including the S3
-demo. Their build stages retain the Go toolchain. The production binaries accept
+Production Dockerfiles use Distroless static runtime images, including the S3
+demo. Local `Dockerfile.dev` images retain Go and Air. The service binaries accept
 `healthcheck` to probe local `/readyz` without a shell or external HTTP client,
 using `SERVICE_PORT` (default `8080`). For a TLS-enabled broker, the probe uses
 its loopback `HEALTH_PORT` (default `8081`). Probes return exit code 0 only for
 HTTP 200 and time out after two seconds. Existing runtime user IDs are preserved
 so mounted broker secrets keep their access permissions.
 
-All five Go modules, including the landing service, declare Go 1.27. Run Go
+All six Go modules, including the landing service, declare Go 1.27. Run Go
 commands from the individual service directory; this parent has no Go module or workspace.
 
 ```sh

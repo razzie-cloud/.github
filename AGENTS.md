@@ -320,7 +320,16 @@ source remain authoritative for service-specific details.
   `http://files.localhost:8080`, Notes `http://notes.localhost:8080`, Chess
   `http://chess.localhost:8080`, guest/view links `http://shared-chess.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
   `LOCAL_PORT` overrides the shared port. Compose builds `landing/` with
-  runtime domain/port settings and an optional app-list JSON mount; rebuild only after source or asset changes.
+  runtime domain/port settings and an optional app-list JSON mount.
+  The main Compose file uses Air-based automatic recompilation in all six
+  first-party services. Each component owns
+  its `Dockerfile.dev` and `.air.toml`; read-only source mounts include embedded
+  assets, while binaries/logs and named build caches stay outside the checkout.
+  Reload browsers after successful builds; rebuild development images after
+  dependency changes. See `docs/development.md#automatic-recompilation`.
+  `docker-compose.none.yml` uses the same dev images, source mounts and caches,
+  but disables broker token authentication and removes its auth mounts;
+  gateway passkey sign-in and SSO remain enabled.
   The broker provisions the gateway's
   and files' PostgreSQL databases and the gateway's numbered Valkey database;
   the gateway uses `REDIS_URI_FROM` with the `valkey` adapter path for credentials.

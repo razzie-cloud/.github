@@ -79,6 +79,9 @@ To try Files without cloud storage, follow the
 [disposable S3 demo](docs/development.md#disposable-s3-demo). Stop the stack with
 `docker compose down`; named volumes preserve accounts and configuration.
 
+The local stack automatically recompiles Go source and embedded assets with Air.
+See [automatic recompilation](docs/development.md#automatic-recompilation).
+
 ## Deploy or develop
 
 For your first deployment from a new environment, follow the
