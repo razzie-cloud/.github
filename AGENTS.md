@@ -213,8 +213,10 @@ source remain authoritative for service-specific details.
   `shared-chess` exposes only fragment-token guest exchange, guest play, viewing
   capabilities and static assets. Both proxy and app enforce the host boundary.
   Gateway owns SSO; Chess always verifies signed PASETO assertions on its app host.
-- PostgreSQL owns matches, canonical moves, grants, sessions, receipts, viewer
-  leases, immutable puzzle definitions, attempts and completion bitsets. No
+- PostgreSQL owns matches, canonical moves, grants, guest sessions, receipts,
+  viewer leases, immutable puzzle definitions and completion bitsets. Puzzle
+  play has no server-side session: each move submits the complete history and
+  boards for proof-based replay; only completion is persisted. No
   Chess Redis/Valkey or S3 backend is needed. Matches never expire; explicit
   owner deletion retains minimal creation tombstones. Back up the full database.
 - Rules use malbrecht/chess with strict UCI/FEN and bounded PGN input. ECO data is
@@ -223,6 +225,12 @@ source remain authoritative for service-specific details.
   every defense with at most one fork and three complete lines at the calculated
   shortest mate length. The unreleased collection contains 206 mate-in-two puzzles
   with consecutive IDs; original source indices remain in provenance.
+- Puzzles opens collections with numbered board previews and immediate play.
+  Every defense line must reach mate before completion is saved; completed boards
+  stay locked at their final positions. Sessions/Archive cards preview the latest
+  match position. New-game choices live in the first navigation item, while match
+  move and access controls live beside the board. Overview navigation replaces
+  redundant page headings; puzzle collections use plain sections and dividers.
 - Local Compose builds `./chess`, uses its dedicated PostgreSQL broker token,
   and exposes `chess.localhost` / `shared-chess.localhost`. Swarm requests two
   replicas with shared PostgreSQL and no affinity. The legacy extra RazChess
