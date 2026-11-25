@@ -220,7 +220,9 @@ source remain authoritative for service-specific details.
 - Rules use malbrecht/chess with strict UCI/FEN and bounded PGN input. ECO data is
   normalized locally and embedded; preserve deepest-prefix labels after leaving
   book. Puzzle proof runs only in `cmd/puzzleprep`; published solutions must cover
-  every defense with at most one fork and three complete lines.
+  every defense with at most one fork and three complete lines at the calculated
+  shortest mate length. The unreleased collection contains 206 mate-in-two puzzles
+  with consecutive IDs; original source indices remain in provenance.
 - Local Compose builds `./chess`, uses its dedicated PostgreSQL broker token,
   and exposes `chess.localhost` / `shared-chess.localhost`. Swarm requests two
   replicas with shared PostgreSQL and no affinity. The legacy extra RazChess
