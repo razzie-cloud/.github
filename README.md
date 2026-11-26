@@ -13,6 +13,7 @@ use and tracks their independent repositories as Git submodules.
 | [files](files/README.md) | Browse, upload, and share S3 files, with optional rclone encryption |
 | [notes](notes/README.md) | Markdown notes with user-managed S3 connections, optional rclone encryption, and search |
 | [chess](chess/README.md) | Private guest matches, permanent Sessions/Archive history and curated mate puzzles |
+| [sudoku](sudoku/README.md) | Five random-game difficulties, saved attempts, and numbered puzzle collections |
 | [landing](landing/README.md) | Public landing page and authenticated Home with personal welcome and app links |
 | [infra](infra/README.md) | Deploys the platform with Docker Swarm and Caddy; includes optional NixOS host configuration |
 
@@ -23,7 +24,8 @@ connection, then connect directly to their data stores. File contents stay in S3
 
 You need Git with GitHub SSH access and Docker with the Compose plugin, using a
 local Docker daemon. Go 1.27 prepares independent development broker
-credentials with `make local-auth`.
+credentials with `make local-auth`. Sudoku is registered as the `sudoku/`
+submodule; publish its repository and pinned commit before publishing the parent pin.
 
 ```sh
 git clone --recurse-submodules git@github.com:razzie-cloud/.github.git razcloud
@@ -46,6 +48,9 @@ source. The [design and implementation evidence](chess/docs/plans/2026-11-24-che
 live in the Chess repository. Production cutover must also remove the old
 RazChess service; see [Chess release preparation](infra/docs/operations.md#chess-cutover-and-rollback).
 
+Sudoku uses the ordinary Gateway sign-in flow and a dedicated PostgreSQL
+instance. See [Sudoku release preparation](infra/docs/operations.md#sudoku-release).
+
 The broker defaults to scoped tokens. Development secrets are generated under
 ignored `.local/broker-auth`; production keys stay in Swarm. The explicit legacy
 Compose override needs no auth files; see [broker authentication](docs/database-broker-auth.md).
@@ -67,6 +72,7 @@ then sign in. The token is logged only once when generated.
 | <http://notes.localhost:8080> | Notes: create notebooks on your S3 connections |
 | <http://chess.localhost:8080> | Chess: create private matches, manage history and solve puzzles |
 | <http://shared-chess.localhost:8080> | Guest playing/viewing links only; the root returns 404 |
+| <http://sudoku.localhost:8080> | Sudoku: generate a game or resume a saved game or puzzle |
 | <http://logs.localhost:8080> | Dozzle: view container logs as an administrator |
 | <http://shared-files.localhost:8080> | Public share host: open a link created in Files; the root returns 404 |
 

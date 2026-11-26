@@ -3,8 +3,8 @@ set -euo pipefail
 
 project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 env_file="${1:-$project_root/infra/.env}"
-services=(database-broker access-gateway files notes landing chess)
-keys=(DATABASE_BROKER_IMAGE_TAG ACCESS_GATEWAY_IMAGE_TAG FILES_IMAGE_TAG NOTES_IMAGE_TAG LANDING_IMAGE_TAG CHESS_IMAGE_TAG)
+services=(database-broker access-gateway files notes landing chess sudoku)
+keys=(DATABASE_BROKER_IMAGE_TAG ACCESS_GATEWAY_IMAGE_TAG FILES_IMAGE_TAG NOTES_IMAGE_TAG LANDING_IMAGE_TAG CHESS_IMAGE_TAG SUDOKU_IMAGE_TAG)
 tags=()
 
 latest_tag() {
@@ -51,16 +51,17 @@ trap '[[ -z "$temporary" ]] || rm -f -- "$temporary"' EXIT
 
 # Replace only service tag assignments, preserving operator settings and comments.
 awk -v broker="${tags[0]}" -v gateway="${tags[1]}" -v files="${tags[2]}" \
-  -v notes="${tags[3]}" -v landing="${tags[4]}" -v chess="${tags[5]}" -v dozzle="$dozzle_tag" '
+  -v notes="${tags[3]}" -v landing="${tags[4]}" -v chess="${tags[5]}" -v sudoku="${tags[6]}" -v dozzle="$dozzle_tag" '
   BEGIN {
-    count = split("DATABASE_BROKER_IMAGE_TAG ACCESS_GATEWAY_IMAGE_TAG FILES_IMAGE_TAG NOTES_IMAGE_TAG LANDING_IMAGE_TAG CHESS_IMAGE_TAG DOZZLE_IMAGE_TAG", keys, " ")
+    count = split("DATABASE_BROKER_IMAGE_TAG ACCESS_GATEWAY_IMAGE_TAG FILES_IMAGE_TAG NOTES_IMAGE_TAG LANDING_IMAGE_TAG CHESS_IMAGE_TAG SUDOKU_IMAGE_TAG DOZZLE_IMAGE_TAG", keys, " ")
     tags[keys[1]] = broker
     tags[keys[2]] = gateway
     tags[keys[3]] = files
     tags[keys[4]] = notes
     tags[keys[5]] = landing
     tags[keys[6]] = chess
-    tags[keys[7]] = dozzle
+    tags[keys[7]] = sudoku
+    tags[keys[8]] = dozzle
   }
   match($0, /^[[:space:]]*(export[[:space:]]+)?[A-Z_]+[[:space:]]*=/) {
     key = substr($0, 1, RLENGTH)

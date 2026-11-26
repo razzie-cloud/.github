@@ -34,3 +34,9 @@ services:
       - chess_go_build:/tmp/go-build
     environment:
       BROKER_TOKEN_FILE: ""
+  sudoku:
+    volumes: !override
+      - ./sudoku:/src:ro
+      - sudoku_go_build:/tmp/go-build
+    environment:
+      BROKER_TOKEN_FILE: ""

@@ -17,7 +17,7 @@ source remain authoritative for service-specific details.
 ## Repository boundaries and Git workflow
 
 - This is the Razzie Cloud parent repository. `access-gateway/`, `database-broker/`, `files/`,
-  `notes/`, `chess/`, `landing/`, and `infra/` are Git submodules with separate histories and GitHub remotes
+  `notes/`, `chess/`, `sudoku/`, `landing/`, and `infra/` are Git submodules with separate histories and GitHub remotes
   under `razzie-cloud`. Use standard `git submodule` commands.
 - Keep root documentation and coordination files in the parent. Change service
   code and deployment files in their owning submodule. Do not copy child source
@@ -240,6 +240,28 @@ source remain authoritative for service-specific details.
   loopback `TEST_DATABASE_URL`. See the service verification report for actual
   passes and remaining browser/live acceptance limits.
 
+### sudoku
+
+- Independent `github.com/razzie-cloud/sudoku` Go module, registered as the `sudoku/`
+  submodule, with entry point
+  `cmd/sudoku/main.go`. Read `sudoku/AGENTS.md` and its design document.
+  Publish its repository and component commit before publishing the parent pin.
+- Signed-in Sudoku has New game, Sessions, Archive and Puzzles in the Chess
+  layout. The generator proves uniqueness and rates five technique levels.
+  Five immutable collections hold 32 generated boards each, within the
+  256-slot limit. Numbered tiles show completion and in-progress borders.
+- PostgreSQL stores owner-scoped random games and puzzle attempts with pencil
+  marks and revisions. Completed boards stay locked. Random games can be
+  archived and resumed, and solved games move to Archive automatically.
+  Archive and Sessions preview the latest saved board.
+- Local Compose builds `./sudoku` and protects all paths on
+  `sudoku.localhost`. Swarm runs two replicas with a scoped `postgres/sudoku`
+  broker grant. The app verifies signed Gateway identity and needs
+  PostgreSQL for private readiness.
+- Run build, vet, tests and race checks inside `sudoku/`. Set a disposable
+  loopback `TEST_DATABASE_URL` and Chromium path for persistence and browser
+  coverage.
+
 ### landing
 
 - Independent `github.com/razzie-cloud/landing` Go module and homepage image.
@@ -270,7 +292,7 @@ source remain authoritative for service-specific details.
 
 - `docker-stack.yml` defines a Docker Swarm stack with PostgreSQL, Valkey,
   the broker, access-gateway, files, Dozzle,
-  Caddy Docker Proxy, Chess, a public landing page at `razzie.cloud`, and a whoami demo.
+  Caddy Docker Proxy, Chess, Sudoku, a public landing page at `razzie.cloud`, and a whoami demo.
   Swarm's `DOMAIN` setting defaults to `razzie.cloud` and controls public hostnames,
   auth origins, and landing-page links and metadata.
   `landing/` is an independent submodule that packages the static page in `ghcr.io/razzie-cloud/landing`;
@@ -326,10 +348,11 @@ source remain authoritative for service-specific details.
   and routes by hostname: public homepage `http://localhost:8080`, gateway
   `http://auth.localhost:8080`, signed-in Home `http://home.localhost:8080`, whoami `http://whoami.localhost:8080`, Files
   `http://files.localhost:8080`, Notes `http://notes.localhost:8080`, Chess
-  `http://chess.localhost:8080`, guest/view links `http://shared-chess.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
+  `http://chess.localhost:8080`, guest/view links `http://shared-chess.localhost:8080`, Sudoku
+  `http://sudoku.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
   `LOCAL_PORT` overrides the shared port. Compose builds `landing/` with
   runtime domain/port settings and an optional app-list JSON mount.
-  The main Compose file uses Air-based automatic recompilation in all six
+  The main Compose file uses Air-based automatic recompilation in all seven
   first-party services. Each component owns
   its `Dockerfile.dev` and `.air.toml`; read-only source mounts include embedded
   assets, while binaries/logs and named build caches stay outside the checkout.
@@ -439,8 +462,8 @@ on them, and update this guide when they change.
   GeoIP and 0x40hues use fixed extra YAML defaults with optional overrides and are excluded from
   tag discovery. Keep other current service versions out of stack files and all
   current versions out of README.md and AGENTS.md. Root `make latest-tags` selects
-  the highest stable numeric release tags from the six platform service remotes
-  (gateway, broker, Files, Notes, Chess and landing)
+  the highest stable numeric release tags from the seven platform service remotes
+  (gateway, broker, Files, Notes, Chess, Sudoku and landing)
   without changing source checkouts or parent pins. Root `make config` and `make deploy` delegate to
   infra's Makefile, which loads and exports the selected environment file.
   `make deploy-latest` combines tag selection and deployment; do not run it as

@@ -14,9 +14,14 @@ prepare
 [[ "$(stat -c %a "$fixture_root/auth/master")" == 600 ]]
 [[ "$(stat -c %a "$fixture_root/auth/chess.token")" == 444 ]]
 [[ -s "$fixture_root/auth/chess.token" ]]
+[[ "$(stat -c %a "$fixture_root/auth/sudoku.token")" == 444 ]]
+[[ -s "$fixture_root/auth/sudoku.token" ]]
+! cmp -s "$fixture_root/auth/chess.token" "$fixture_root/auth/sudoku.token"
 cp "$fixture_root/auth/master" "$fixture_root/master.before"
 cp "$fixture_root/auth/chess.token" "$fixture_root/chess.before"
+cp "$fixture_root/auth/sudoku.token" "$fixture_root/sudoku.before"
 prepare
 cmp "$fixture_root/auth/master" "$fixture_root/master.before"
 cmp "$fixture_root/auth/chess.token" "$fixture_root/chess.before"
-printf 'Development auth fixtures passed (Chess token, private permissions, idempotent regeneration).\n'
+cmp "$fixture_root/auth/sudoku.token" "$fixture_root/sudoku.before"
+printf 'Development auth fixtures passed (Chess and Sudoku tokens, private permissions, idempotent regeneration).\n'

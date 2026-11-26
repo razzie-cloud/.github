@@ -132,7 +132,7 @@ services:
       RP_NAME: Razzie Cloud local
       # Gateway ports are private; Caddy reaches it over Docker networks.
       TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
-      FORWARD_AUTH_ORIGINS: http://home.localhost:${LOCAL_PORT:-8080},http://whoami.localhost:${LOCAL_PORT:-8080},http://files.localhost:${LOCAL_PORT:-8080},http://logs.localhost:${LOCAL_PORT:-8080},http://notes.localhost:${LOCAL_PORT:-8080},http://chess.localhost:${LOCAL_PORT:-8080}
+      FORWARD_AUTH_ORIGINS: http://home.localhost:${LOCAL_PORT:-8080},http://whoami.localhost:${LOCAL_PORT:-8080},http://files.localhost:${LOCAL_PORT:-8080},http://logs.localhost:${LOCAL_PORT:-8080},http://notes.localhost:${LOCAL_PORT:-8080},http://chess.localhost:${LOCAL_PORT:-8080},http://sudoku.localhost:${LOCAL_PORT:-8080}
     networks:
       - backend
       - web
@@ -253,6 +253,37 @@ services:
       database-broker:
         condition: service_healthy
 
+  sudoku:
+    <<: *air
+    image: razcloud-sudoku:dev
+    build:
+      <<: *air-build
+      context: ./sudoku
+      network: host
+    volumes:
+      - ./sudoku:/src:ro
+      - sudoku_go_build:/tmp/go-build
+      - type: bind
+        source: ./.local/broker-auth/sudoku.token
+        target: /run/secrets/broker_token
+        read_only: true
+        bind:
+          create_host_path: false
+    environment:
+      BROKER_TOKEN_FILE: /run/secrets/broker_token
+      ACCESS_GATEWAY_URL: http://access-gateway:8080
+      POSTGRES_URI_FROM: http://database-broker:8080/v1/instances/postgres/sudoku/uri?client=sudoku
+      ORIGIN: http://sudoku.localhost:${LOCAL_PORT:-8080}
+      LANDING_ORIGIN: http://home.localhost:${LOCAL_PORT:-8080}
+    networks:
+      - backend
+      - web
+    depends_on:
+      access-gateway:
+        condition: service_healthy
+      database-broker:
+        condition: service_healthy
+
   s3-demo:
     profiles: [storage-demo]
     build:
@@ -289,6 +320,8 @@ services:
         condition: service_started
       chess:
         condition: service_started
+      sudoku:
+        condition: service_started
       dozzle:
         condition: service_started
 
@@ -306,4 +339,5 @@ volumes:
   files_go_build:
   notes_go_build:
   chess_go_build:
+  sudoku_go_build:
   landing_go_build:

@@ -24,6 +24,11 @@ clients:
     allow:
       - adapter: postgres
         instance: chess
+  sudoku:
+    generation: 1
+    allow:
+      - adapter: postgres
+        instance: sudoku
   razchess:
     generation: 1
     allow:

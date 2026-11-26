@@ -22,7 +22,8 @@ pushes remain published. Tag pushes may trigger release workflows.
 
 Run the commands in this guide from the parent repository root.
 
-With the submodules checked out and Docker Compose installed, run these commands
+With the submodules checked out and
+Docker Compose installed, run these commands
 from the project root against your local Docker daemon:
 
 ```sh
@@ -34,13 +35,12 @@ docker compose up --build -d
 docker compose logs access-gateway
 ```
 
-Compose builds all six first-party services with their `Dockerfile.dev` and
+Compose builds all seven first-party services with their `Dockerfile.dev` and
 tags them as `razcloud-<service>:dev`. Air automatically rebuilds and restarts
 each service when its source or embedded assets change.
 
 The public homepage is at <http://localhost:8080>. Compose builds the independent
-`landing/` submodule. Its optional `LANDING_APPS_FILE` JSON mount defaults to the
-Files/Notes example. Domain, scheme and `LOCAL_PORT` are rendered at container
+`landing/` submodule. Its optional `LANDING_APPS_FILE` JSON mount defaults to the example containing Files, Notes, Chess and Sudoku. Domain, scheme and `LOCAL_PORT` are rendered at container
 startup. Recreate containers after port or external config changes; Air handles
 source and asset changes automatically. One landing service uses `PAGE_MODE=both`
 to serve the public apex and <http://home.localhost:8080> by Host on the same port.
@@ -48,7 +48,7 @@ Home requires signed identity; Compose waits for gateway readiness before starti
 landing. Both pages share startup and restart availability. After upgrading from
 two containers, explicitly remove the obsolete Home container after rollout.
 Every Home path uses forward auth. Gateway `HOME_ORIGIN` sends direct sign-ins
-there; app SSO retains its requested destination. Files and Notes receive Home as
+there; app SSO retains its requested destination. Files, Notes, Chess and Sudoku receive Home as
 `LANDING_ORIGIN`. Gateway receives the public landing origin and uses HOME_ORIGIN
 for its signed-in logo; sign-out switches it back to the public landing page.
 The service name opens the app. Home links to gateway device/session management.
@@ -101,7 +101,7 @@ setup against a trusted local daemon.
 ### Automatic recompilation
 
 The main Compose file uses development images for Gateway, Broker, Files,
-Notes, Chess and Landing. After the initial `.env` and `make local-auth` setup:
+Notes, Chess, Sudoku and Landing. After the initial `.env` and `make local-auth` setup:
 
 ```sh
 docker compose up --build -d
@@ -115,7 +115,7 @@ service survives container recreation. Polling supports Docker Desktop and WSL
 mounts. The first compilation can take longer; development health checks allow
 three minutes before counting failures.
 
-Files, Notes, Chess and Landing development images run as `DEV_UID:DEV_GID`
+Files, Notes, Chess, Sudoku and Landing development images run as `DEV_UID:DEV_GID`
 (both default to 1000) so they can read source files restricted to your host
 user. Set these in `.env` to `id -u` / `id -g` before the first build if needed;
 standalone builds accept the same values as Docker build arguments. Broker and
@@ -241,11 +241,11 @@ following Files; notebook lookups remain owner-scoped. See
 
 ### Local stack internals and cleanup
 
-The root [docker-compose.yml](../docker-compose.yml) builds all six first-party
-services from their submodules using `Dockerfile.dev`, with read-only source
+The root [docker-compose.yml](../docker-compose.yml) builds all seven first-party
+services from their independent checkouts using `Dockerfile.dev`, with read-only source
 mounts and named Go build caches for automatic recompilation.
 The homepage joins only the web network, is public, and has no database dependency.
-The broker provisions the gateway's, Files' and Notes' PostgreSQL databases
+The broker provisions PostgreSQL databases for Gateway, Files, Notes, Chess and Sudoku
 and the gateway's numbered Valkey database. The gateway discovers
 its credentials through `REDIS_URI_FROM` using `/v1/instances/valkey/access_gateway/uri`.
 Valkey requires the local `VALKEY_PASSWORD`; `VALKEY_IMAGE_TAG` selects a 9.1.0+
@@ -256,7 +256,8 @@ uses the broker CLI to generate independent ignored development credentials. See
 [broker authentication](database-broker-auth.md) for both Compose modes and production
 TLS. The broker waits for both PostgreSQL
 and Valkey health checks before starting. Caddy
-checks every whoami/files request, including the SSO callback, with the gateway's
+checks every Sudoku, Chess, Notes, Files and whoami management request,
+including the SSO callback, with the gateway's
 `/forward_auth` endpoint, and Dozzle requests with `/forward_auth/admin`, before
 proxying them. Only Caddy publishes a port, bound to loopback; the broker and
 data stores stay on an internal network. This setup
@@ -294,7 +295,7 @@ its loopback `HEALTH_PORT` (default `8081`). Probes return exit code 0 only for
 HTTP 200 and time out after two seconds. Existing runtime user IDs are preserved
 so mounted broker secrets keep their access permissions.
 
-All six Go modules, including the landing service, declare Go 1.27. Run Go
+All seven platform Go modules, including the landing service, declare Go 1.27. Run Go
 commands from the individual service directory; this parent has no Go module or workspace.
 
 ```sh
@@ -345,9 +346,10 @@ make deploy
 
 `latest-tags` uses Bash, Git, awk, and GNU coreutils (`sort -V`). It selects the highest
 numeric stable release tag (`MAJOR.MINOR.PATCH`, with an optional `v` prefix)
-for the five platform services (gateway, broker, Files, Notes and landing),
+for the seven platform services (gateway, broker, Files, Notes, Chess, Sudoku
+and landing),
 fetches it into each service repository, and
-writes those image tags to ignored `infra/.env`. RazChess, UUID, GeoIP and 0x40hues use
+writes those image tags to ignored `infra/.env`. UUID, GeoIP and 0x40hues use
 fixed stack defaults with optional overrides in `.env`; this command does not
 query their remotes or change their overrides.
 If an existing file lacks `DOZZLE_IMAGE_TAG`, it adds the default
