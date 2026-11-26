@@ -219,6 +219,16 @@ source remain authoritative for service-specific details.
   boards for proof-based replay; only completion is persisted. No
   Chess Redis/Valkey or S3 backend is needed. Matches never expire; explicit
   owner deletion retains minimal creation tombstones. Back up the full database.
+- Stockfish bot opponents use five fixed difficulty levels across all
+  three match creators. Chess persists one pending bot job per match in PostgreSQL,
+  dispatches it to the private bounded worker and accepts authenticated callbacks
+  only on a separate private listener. Recheck revision, bot seat and legality
+  under the match lock; bot matches have no guest playing grants. The local
+  main Compose file and production Swarm stack cap the worker at
+  1.25 CPU / 512 MiB, with one engine search and eight accepted jobs. Production
+  deploy creates/reuses
+  the `chess_bot_token` Swarm secret for both services, and the worker companion
+  image follows `CHESS_IMAGE_TAG`. See `chess/docs/plans/2026-11-26-stockfish-bot.md`.
 - Rules use malbrecht/chess with strict UCI/FEN and bounded PGN input. ECO data is
   normalized locally and embedded; preserve deepest-prefix labels after leaving
   book. Puzzle proof runs only in `cmd/puzzleprep`; published solutions must cover
@@ -343,15 +353,18 @@ source remain authoritative for service-specific details.
   publish ports 5432 and 8080; run them separately or adjust host port mappings.
 - The parent `docker-compose.yml` builds the first-party services and runs a local auth
   demo with PostgreSQL, Valkey, Caddy, and traefik/whoami. Copy `.env.example`
-  to `.env` and set separate local `POSTGRES_PASSWORD` and `VALKEY_PASSWORD`
-  values before starting. Caddy publishes a single loopback HTTP port, `8080`,
+  to `.env` and set separate local `POSTGRES_PASSWORD`, `VALKEY_PASSWORD` and
+  `CHESS_BOT_TOKEN` values before starting (the bot token needs 32+ characters).
+  Caddy publishes a single loopback HTTP port, `8080`,
   and routes by hostname: public homepage `http://localhost:8080`, gateway
   `http://auth.localhost:8080`, signed-in Home `http://home.localhost:8080`, whoami `http://whoami.localhost:8080`, Files
   `http://files.localhost:8080`, Notes `http://notes.localhost:8080`, Chess
   `http://chess.localhost:8080`, guest/view links `http://shared-chess.localhost:8080`, Sudoku
   `http://sudoku.localhost:8080`, and Dozzle `http://logs.localhost:8080`.
   `LOCAL_PORT` overrides the shared port. Compose builds `landing/` with
-  runtime domain/port settings and an optional app-list JSON mount.
+  runtime domain/port settings and an optional app-list JSON mount. The main
+  stack includes the private Stockfish worker; it uses `chess/Dockerfile.bot`,
+  without Air or a source mount. Chess and Stockfish share `CHESS_BOT_TOKEN`.
   The main Compose file uses Air-based automatic recompilation in all seven
   first-party services. Each component owns
   its `Dockerfile.dev` and `.air.toml`; read-only source mounts include embedded

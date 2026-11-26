@@ -12,7 +12,7 @@ use and tracks their independent repositories as Git submodules.
 | [database-broker](database-broker/README.md) | Creates per-service PostgreSQL and Valkey databases and returns their connection URIs |
 | [files](files/README.md) | Browse, upload, and share S3 files, with optional rclone encryption |
 | [notes](notes/README.md) | Markdown notes with user-managed S3 connections, optional rclone encryption, and search |
-| [chess](chess/README.md) | Private guest matches, permanent Sessions/Archive history and curated mate puzzles |
+| [chess](chess/README.md) | Private guest/bot matches, permanent Sessions/Archive history and curated mate puzzles |
 | [sudoku](sudoku/README.md) | Five random-game difficulties, saved attempts, and numbered puzzle collections |
 | [landing](landing/README.md) | Public landing page and authenticated Home with personal welcome and app links |
 | [infra](infra/README.md) | Deploys the platform with Docker Swarm and Caddy; includes optional NixOS host configuration |
@@ -33,6 +33,7 @@ cd razcloud
 cp .env.example .env
 # Set POSTGRES_PASSWORD and VALKEY_PASSWORD to separate random hex values.
 # Generate each with: openssl rand -hex 24
+# Set CHESS_BOT_TOKEN separately with: openssl rand -hex 32
 make local-auth
 docker compose up --build -d
 docker compose logs access-gateway
@@ -47,6 +48,12 @@ image must be published before deployment. The local stack builds the checked-ou
 source. The [design and implementation evidence](chess/docs/plans/2026-11-24-chess-implementation.md)
 live in the Chess repository. Production cutover must also remove the old
 RazChess service; see [Chess release preparation](infra/docs/operations.md#chess-cutover-and-rollback).
+
+The main Compose stack includes a private Stockfish worker for Chess's five bot
+difficulties. It runs one search at a time with 1.25 CPU / 512 MiB limits and a
+bounded queue. Set `CHESS_BOT_TOKEN` to a random token of at least 32 characters
+in `.env`; Chess and the worker receive the same value. See
+[Chess bots](docs/development.md#chess-bots) for configuration and idle usage.
 
 Sudoku uses the ordinary Gateway sign-in flow and a dedicated PostgreSQL
 instance. See [Sudoku release preparation](infra/docs/operations.md#sudoku-release).

@@ -27,6 +27,12 @@ errors.
 See [creator verification](../chess/docs/verification.md#match-creators--26-november-2026)
 and the [normal-game screenshot](../chess/docs/screenshots/setup-standard-light-1440.png).
 
+Chess's three production setup forms now also offer a Stockfish opponent and
+five difficulty levels. Switching opponents retains drafts, and custom validation
+retains the selected bot level. See the [desktop bot setup](../chess/docs/screenshots/setup-bot-light-1440.png),
+[dark mobile setup](../chess/docs/screenshots/setup-bot-dark-390.png) and
+[bot server design](../chess/docs/plans/2026-11-26-stockfish-bot.md).
+
 ## Notes attachment browser proposal
 
 The attachment browser in [light](../notes/docs/mockups/attachment-browser.html)

@@ -244,6 +244,10 @@ services:
       ORIGIN: http://chess.localhost:${LOCAL_PORT:-8080}
       SHARE_ORIGIN: http://shared-chess.localhost:${LOCAL_PORT:-8080}
       LANDING_ORIGIN: http://home.localhost:${LOCAL_PORT:-8080}
+      BOT_URL: http://stockfish:8080/jobs
+      BOT_WEBHOOK_URL: http://chess:8082/bot/moves
+      BOT_PORT: "8082"
+      BOT_TOKEN: ${CHESS_BOT_TOKEN:?Set CHESS_BOT_TOKEN to a random 32+ character token}
     networks:
       - backend
       - web
@@ -252,6 +256,24 @@ services:
         condition: service_healthy
       database-broker:
         condition: service_healthy
+
+  stockfish:
+    build:
+      context: ./chess
+      dockerfile: Dockerfile.bot
+    image: razcloud-stockfish:local
+    environment:
+      BOT_WEBHOOK_URL: http://chess:8082/bot/moves
+      BOT_TOKEN: ${CHESS_BOT_TOKEN:?Set CHESS_BOT_TOKEN to a random 32+ character token}
+      BOT_QUEUE_SIZE: ${CHESS_BOT_QUEUE_SIZE:-8}
+    cpus: "1.25"
+    mem_limit: 512m
+    pids_limit: 32
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [backend]
+    restart: unless-stopped
 
   sudoku:
     <<: *air

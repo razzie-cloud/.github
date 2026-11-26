@@ -18,6 +18,33 @@ Uncommitted files are left as they are; the parent repository and other local
 branches are not pushed. Pushes stop on the first failure; earlier successful
 pushes remain published. Tag pushes may trigger release workflows.
 
+### Chess bots
+
+The main `docker-compose.yml` includes the private Stockfish worker. Set a fresh
+`CHESS_BOT_TOKEN` of at least 32 characters in the ignored `.env` (generate with
+`openssl rand -hex 32`). Ordinary `docker compose up --build -d` starts it with
+Chess. For an already-running stack, update only these two services with:
+
+```sh
+docker compose up --build -d --no-deps chess stockfish
+```
+
+The worker runs one search at a time, with a hard 1.25 CPU / 512 MiB limit and
+eight accepted jobs including its current turn. `CHESS_BOT_QUEUE_SIZE` can set
+that limit from 1 to 32. New-game forms offer five difficulties for standard,
+Fischer random and custom games. Bot turns survive worker/Chess restarts in
+Chess's PostgreSQL outbox. No engine or webhook port is exposed to the host.
+The worker is also included with the `docker-compose.none.yml` broker-auth
+override and keeps its independent bot token in that mode.
+
+The engine process exits after each search. In a local idle sample on
+27 November 2026, Docker reported about 7 MiB memory and 0.00% CPU across three
+snapshots; cgroup CPU averaged 0.28% of one core over 13 seconds including health
+checks. The worker process RSS was about 11 MiB; another 86 MiB was reclaimable
+container file cache. Values vary with recent work and cache pressure. The prior
+active saturation check peaked near 209 MiB. These are measurements, not memory
+reservations. See the [server design and API](../chess/docs/plans/2026-11-26-stockfish-bot.md).
+
 ### Run the complete local stack
 
 Run the commands in this guide from the parent repository root.
@@ -30,6 +57,7 @@ from the project root against your local Docker daemon:
 cp .env.example .env
 # Set POSTGRES_PASSWORD and VALKEY_PASSWORD to separate random hex values.
 # Generate each with: openssl rand -hex 24
+# Set CHESS_BOT_TOKEN separately with: openssl rand -hex 32
 make local-auth  # Requires Go 1.27; writes ignored development secrets
 docker compose up --build -d
 docker compose logs access-gateway
@@ -37,7 +65,8 @@ docker compose logs access-gateway
 
 Compose builds all seven first-party services with their `Dockerfile.dev` and
 tags them as `razcloud-<service>:dev`. Air automatically rebuilds and restarts
-each service when its source or embedded assets change.
+each service when its source or embedded assets change. The separate Stockfish
+worker builds from `chess/Dockerfile.bot`; rebuild it after worker source changes.
 
 The public homepage is at <http://localhost:8080>. Compose builds the independent
 `landing/` submodule. Its optional `LANDING_APPS_FILE` JSON mount defaults to the example containing Files, Notes, Chess and Sudoku. Domain, scheme and `LOCAL_PORT` are rendered at container
