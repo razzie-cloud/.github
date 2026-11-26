@@ -1,5 +1,32 @@
 # Frontend design mockups
 
+## Chess custom game proposal
+
+The [light preview](../chess/docs/mockups/custom-game.html) and
+[dark preview](../chess/docs/mockups/dark/custom-game.html) give the custom-game
+board its own desktop column, with position input and match details alongside.
+Board editor / FEN / PGN source choices show one input panel at a time; less-used
+position rules start collapsed. Tablet and mobile layouts stack the workspace.
+See the [screen guide](../chess/docs/mockups/README.md) and
+[desktop screenshot](../chess/docs/mockups/custom-game-desktop.png).
+All interactions use local sample state or authored GET receipts; no match is
+created and no form values are sent. Production templates are unchanged.
+
+Brave/Chromium passed both themes at 320/390/768/1440 pixels, including keyboard,
+source/draft behavior, position tools, theme links and simulated creation. Four
+screenshots were saved; no browser/CSP errors or failed responses occurred.
+Local references and whitespace checks passed. Service tests and live validation
+were not part of this static proposal.
+
+Chess now implements the reviewed custom-game layout and extends it to normal
+and Fischer random creation. Simple creators show board previews without the
+custom editor. Chess960 now opens a random layout and provides a top-right HTMX
+Refresh button using Gateway's icon; creation uses the displayed layout. Custom
+validation and creation use the chosen source and retain inactive drafts on input
+errors.
+See [creator verification](../chess/docs/verification.md#match-creators--26-november-2026)
+and the [normal-game screenshot](../chess/docs/screenshots/setup-standard-light-1440.png).
+
 ## Notes attachment browser proposal
 
 The attachment browser in [light](../notes/docs/mockups/attachment-browser.html)
