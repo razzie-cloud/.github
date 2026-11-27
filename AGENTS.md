@@ -243,9 +243,10 @@ source remain authoritative for service-specific details.
   redundant page headings; puzzle collections use plain sections and dividers.
 - Local Compose builds `./chess`, uses its dedicated PostgreSQL broker token,
   and exposes `chess.localhost` / `shared-chess.localhost`. Swarm requests two
-  replicas with shared PostgreSQL and no affinity. The legacy extra RazChess
-  definition is removed; cutover must explicitly stop the old running service,
-  preserve its Valkey data/grant for rollback and prepare public-host DNS/TLS.
+  replicas with shared PostgreSQL and no affinity. Public RazChess remains in
+  `infra/extra/razchess.yml` at `razchess.<DOMAIN>` with its existing Valkey data/grant.
+  At cutover, deploy extras to move its old `chess.<DOMAIN>` route before core
+  Chess takes that hostname, and prepare public-host DNS/TLS.
 - Run build/vet/unit/race checks inside `chess/`; database tests require disposable
   loopback `TEST_DATABASE_URL`. See the service verification report for actual
   passes and remaining browser/live acceptance limits.
@@ -310,11 +311,11 @@ source remain authoritative for service-specific details.
   The `internal` overlay carries database traffic; `web` carries ingress traffic. Caddy uses service
   deployment labels and publishes ports 80/443 in host mode to preserve visitor
   IPs for GeoIP. Public DNS targets the manager running Caddy.
-  Public UUID/GeoIP/0x40hues definitions live individually in infra/extra/.
+  Public RazChess/UUID/GeoIP/0x40hues definitions live individually in infra/extra/.
   Root/infra make config-extra and deploy-extra discover those YAMLs separately.
   Broker labels map Redis/PostgreSQL instances to deploy-time environment variables;
-  the temporary fetcher reuses scoped tokens and verified TLS. GeoIP uses its own Valkey instance. The legacy RazChess grant/data remain
-  only for the explicit rollback window; Chess uses a separate PostgreSQL instance. See
+  the temporary fetcher reuses scoped tokens and verified TLS. GeoIP and RazChess
+  use separate Valkey instances; Chess uses a separate PostgreSQL instance. See
   `infra/docs/operations.md`.
 - `deploy.sh` creates missing external Docker secrets and deploys the stack.
   Its defaults are Docker context `razcloud` and stack name `razzie-cloud`,
